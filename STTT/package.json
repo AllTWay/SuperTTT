@@ -1,0 +1,21 @@
+{
+    "name": "sttt",
+    "version": "1.0.0",
+    "description": "A game of Super Tic-Tac-Toe",
+    "main": "/backend/node_server.js",
+    "directories": {
+        "lib": "lib"
+    },
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "keywords": [
+        "game",
+        "tic-tac-toe"
+    ],
+    "author": "Migmac & afonsocrg",
+    "license": "ISC",
+    "dependencies": {
+        "express": "^4.17.1"
+    }
+}
