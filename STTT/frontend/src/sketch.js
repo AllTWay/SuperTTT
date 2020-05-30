@@ -1,1 +1,1 @@
-console.log("Hello blet!");
+console.log("Hello cunt!");

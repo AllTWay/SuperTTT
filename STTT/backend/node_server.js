@@ -1,48 +1,58 @@
+const colorModule = require(`./console_colors.js`);
+const color = colorModule.name;
+
+const WHITE = `${color["BGwhite"]}${color["black"]}`;
+const RESET = `${color["reset"]}`;
+const GREEN = `${color["green"]}`;
+const YELLOW = `${color["yellow"]}`;
+const CYAN = `${color["cyan"]}`;
+const RED = `${color["red"]}`;
+
 var logging = true;
-var log_dependencies = false;
+var log_dependencies = true;
 
 if (logging) {
     if (log_dependencies) {
-        console.log('\x1b[31m' + 'Dependencies');
-        console.log('\x1b[31m' + '--> ' + '\x1b[33m' + 'Express' + '\x1b[0m');
-        console.log('\x1b[31m' + '--> ' + '\x1b[33m' + 'Express-Favicon' + '\x1b[0m');
+        console.log(`${RED}Dependencies${RESET}`);
+        console.log(`${RED}  --> ${YELLOW}Express${RESET}`);
+        console.log(`${RED}  --> ${YELLOW}Express-Favicon${RESET}`);
     }
-    console.log('.'); //Start Spacer
-    console.log('+============================+');
-    console.log('|  Starting STTT by ' + '\x1b[36m%s\x1b[0m', 'AllTWay' + '\x1b[0m', ' |');
-    console.log('+==+=========================+');
+    console.log(`.`);
+    console.log(`+============================+`);
+    console.log(`|  Starting STTT by ${CYAN}AllTWay${RESET}  |`);
+    console.log(`+==+=========================+`);
 } else {
-    console.log('Starting STTT by ' + '\x1b[36m%s\1', 'AllTWay' + '\x1b[0m');
+    console.log(`Starting STTT by ${CYAN}AllTWay${RESET}`);
 }
 
 //VARIABLES
 var private_ipv4; //Server can be accessed through this ip if in the same network
-const PORT = 8080; //C4 server port [80 is default for web]
+const PORT = 8080;
 
-var os = require('os');
-var fs = require('fs');
+var os = require(`os`);
+var fs = require(`fs`);
 
-var express = require('express');
+var express = require(`express`);
 var app = express();
 
-var favicon = require('express-favicon');
+var favicon = require(`express-favicon`);
 
 
 //LOCAL IPV4 DETECTION
 var ifaces = os.networkInterfaces();
-'use strict';
+`use strict`;
 Object.keys(ifaces).forEach(function(ifname) {
     var alias = 0;
 
     ifaces[ifname].forEach(function(iface) {
-        if ('IPv4' !== iface.family || iface.internal !== false) {
+        if (`IPv4` !== iface.family || iface.internal !== false) {
             // skips over internal (i.e. 127.0.0.1) and non-ipv4 addresses
             return;
         }
 
         if (alias >= 1) {
             // this single interface has multiple ipv4 addresses
-            //console.log(ifname + ':' + alias, iface.address);
+            //console.log(ifname + `:` + alias, iface.address);
         } else {
             // this interface has only one ipv4 address
             //console.log(ifname, iface.address);
@@ -53,26 +63,29 @@ Object.keys(ifaces).forEach(function(ifname) {
 });
 
 //START HTML SERVER
-app.use(express.static(__dirname + "/../frontend")); //Prevents MIME TYPE error by making html directory static and therefore usable
-app.use(favicon(__dirname + '/../frontend/assets/img/hashtag.png')); //Favicon handler
+//Prevents MIME TYPE error by making html directory static and therefore usable
+app.use(express.static(__dirname + "/../frontend"));
 
-app.get('/', function(req, res) {
+//Favicon handler
+app.use(favicon(__dirname + `/../frontend/assets/img/hashtag.png`));
+
+//Redirect any incorrect path to main page
+app.get(`*`, function(req, res) { res.redirect(`/`); });
+
+// root entry
+app.get(`/`, function(req, res) {
     res.statusCode = 200;
-    res.sendFile('index.html', { root: __dirname })
-    res.setHeader('Content-Type', 'text/html');
+    res.sendFile(`index.html`, { root: __dirname })
+    res.setHeader(`Content-Type`, `text/html`);
     res.end();
 });
 
-// app.get('*', function(req, res) { res.redirect('/'); }); //Redirects any incorrect links to main page
 
+// run server
 app.listen(PORT, () => {
-    console.log(`STTT Server running on port ${PORT}.`);
-});
-
-//Extra Logging
-// if (logging) {
-//     console.log('   |');
-//     console.log('   +--=[' + '\x1b[47m\x1b[30m' + ' Private IP ' + '\x1b[0m' + ']=--> ' + '\x1b[32m' + private_ipv4 + '\x1b[0m');
-//     console.log('   |');
-//     console.log('   .'); //End Spacer
-// }
+        console.log(`   |`);
+        console.log(`   +--=[${WHITE}Private IP${RESET}]=--> ${GREEN}${private_ipv4}:${YELLOW}${PORT}${RESET}`);
+        console.log(`   |`);
+        console.log(`   .`); //End Spacer
+    })
+    .on(`error`, err => console.log(err));
