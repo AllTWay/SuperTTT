@@ -37,7 +37,6 @@ var app = express();
 
 var favicon = require(`express-favicon`);
 
-
 //LOCAL IPV4 DETECTION
 var ifaces = os.networkInterfaces();
 `use strict`;
@@ -69,19 +68,18 @@ app.use(express.static(__dirname + "/../frontend"));
 //Favicon handler
 app.use(favicon(__dirname + `/../frontend/assets/img/hashtag.png`));
 
-//Redirect any incorrect path to main page
-app.get(`*`, function(req, res) { res.redirect(`/`); });
-
-// root entry
+//Root entry
 app.get(`/`, function(req, res) {
     res.statusCode = 200;
-    res.sendFile(`index.html`, { root: __dirname })
     res.setHeader(`Content-Type`, `text/html`);
+    res.sendFile(`index.html`, { root: __dirname });
     res.end();
 });
 
+//Redirect any incorrect path to main page
+app.get(`*`, function(req, res) { res.redirect(`/`); });
 
-// run server
+//Run server
 app.listen(PORT, () => {
         console.log(`   |`);
         console.log(`   +--=[${WHITE}Private IP${RESET}]=--> ${GREEN}${private_ipv4}:${YELLOW}${PORT}${RESET}`);
