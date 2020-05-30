@@ -7,7 +7,8 @@
         "lib": "lib"
     },
     "scripts": {
-        "test": "echo \"Error: no test specified\" && exit 1"
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "start": "node backend/node_server.js"
     },
     "keywords": [
         "game",
@@ -16,6 +17,7 @@
     "author": "Migmac & afonsocrg",
     "license": "ISC",
     "dependencies": {
-        "express": "^4.17.1"
+        "express": "^4.17.1",
+        "express-favicon": "^2.0.1"
     }
 }

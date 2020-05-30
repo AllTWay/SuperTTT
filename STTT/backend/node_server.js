@@ -1,5 +1,5 @@
 var logging = true;
-var log_dependencies = true;
+var log_dependencies = false;
 
 if (logging) {
     if (log_dependencies) {
@@ -17,18 +17,19 @@ if (logging) {
 
 //VARIABLES
 var private_ipv4; //Server can be accessed through this ip if in the same network
-const PORT = 80; //C4 server port [80 is default for web]
+const PORT = 8080; //C4 server port [80 is default for web]
 
 var os = require('os');
 var fs = require('fs');
 
 var express = require('express');
-var favicon = require('express-favicon');
-
-var ifaces = os.networkInterfaces();
 var app = express();
 
+var favicon = require('express-favicon');
+
+
 //LOCAL IPV4 DETECTION
+var ifaces = os.networkInterfaces();
 'use strict';
 Object.keys(ifaces).forEach(function(ifname) {
     var alias = 0;
@@ -52,26 +53,26 @@ Object.keys(ifaces).forEach(function(ifname) {
 });
 
 //START HTML SERVER
-app.use(express.static(__dirname + "../frontend")); //Prevents MIME TYPE error by making html directory static and therefore usable
-app.use(favicon(__dirname + '../frontend/html/assets/img/hashtag.png')); //Favicon handler
+app.use(express.static(__dirname + "/../frontend")); //Prevents MIME TYPE error by making html directory static and therefore usable
+app.use(favicon(__dirname + '/../frontend/assets/img/hashtag.png')); //Favicon handler
 
 app.get('/', function(req, res) {
     res.statusCode = 200;
-    res.sendFile('../frontend/index.html', { root: __dirname })
+    res.sendFile('index.html', { root: __dirname })
     res.setHeader('Content-Type', 'text/html');
     res.end();
 });
 
-app.get('*', function(req, res) { res.redirect('/'); }); //Redirects any incorrect links to main page
+// app.get('*', function(req, res) { res.redirect('/'); }); //Redirects any incorrect links to main page
 
 app.listen(PORT, () => {
     console.log(`STTT Server running on port ${PORT}.`);
 });
 
 //Extra Logging
-if (logging) {
-    console.log('   |');
-    console.log('   +--=[' + '\x1b[47m\x1b[30m' + ' Private IP ' + '\x1b[0m' + ']=--> ' + '\x1b[32m' + private_ipv4 + '\x1b[0m');
-    console.log('   |');
-    console.log('   .'); //End Spacer
-}
+// if (logging) {
+//     console.log('   |');
+//     console.log('   +--=[' + '\x1b[47m\x1b[30m' + ' Private IP ' + '\x1b[0m' + ']=--> ' + '\x1b[32m' + private_ipv4 + '\x1b[0m');
+//     console.log('   |');
+//     console.log('   .'); //End Spacer
+// }
