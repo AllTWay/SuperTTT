@@ -1,3 +1,25 @@
+:root {
+    /* how to use example: var(--blue-100) */
+    /* Blues */
+    --blue-100: #BBDEFB;
+    --blue-300: #64B5F6;
+    --blue-500: #2196F3;
+    --blue-700: #1976D2;
+    --blue-900: #0D47A1;
+    /* Pinks */
+    --pink-100: #F8BBD0;
+    --pink-300: #F06292;
+    --pink-500: #E91E63;
+    --pink-700: #C2185B;
+    --pink-900: #880E4F;
+    /* Greys */
+    --grey-100: #F5F5F5;
+    --grey-300: #E0E0E0;
+    --grey-500: #9E9E9E;
+    --grey-700: #616161;
+    --grey-900: #212121;
+}
+
 * {
     margin: 0;
     padding: 0;
@@ -8,11 +30,10 @@ body {
     font-family: sans-serif;
     display: flex;
     justify-content: center;
-
 }
 
 .container {
-    background: #AAAAAA;
+    background: var(--grey-300);
     border-radius: 25px;
     margin: 50px;
     padding: 50px;
@@ -20,6 +41,7 @@ body {
 
 .title {
     text-align: center;
+    color: var(--grey-700);
 }
 
 .control {
@@ -29,30 +51,35 @@ body {
     font-size: 25px;
 }
 
+.status {
+    color: var(--grey-700);
+}
+
 .reset {
+    color: var(--grey-700);
     cursor: pointer;
 }
 
 .reset:hover {
-    color: white;
+    color: var(--pink-500);
 }
 
 .game-grid {
     display: grid;
-    background: #888888;
+    background: var(--grey-700);
     grid-template-columns: repeat(3, 1fr);
     grid-template-rows: repeat(3, 1fr);
     grid-gap: 15px;
 }
 
 .super-cell {
-    background: #AAAAAA;
+    background: var(--grey-300);
     padding: 15px;
 }
 
 .small-grid {
     display: grid;
-    background: #888888;
+    background: var(--grey-700);
     grid-template-columns: repeat(3, 1fr);
     grid-template-rows: repeat(3, 1fr);
     grid-gap: 5px;
@@ -61,6 +88,6 @@ body {
 .game-cell {
     height: 50px;
     width: 50px;
-    background: #AAAAAA;
+    background: var(--grey-300);
     cursor: pointer;
 }
