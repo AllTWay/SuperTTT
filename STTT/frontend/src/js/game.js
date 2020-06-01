@@ -47,7 +47,7 @@ function handle_setup(msg) {
     }
 
     set_turn(msg.next_player);
-
+    set_valid(msg.valid_squares, msg.next_player);
     set_board(msg.board);
 }
 
@@ -65,24 +65,27 @@ function set_board(board) {
     }
 }
 
+function set_valid(valid, player) {
+    for(const small_grid of smallGrids) {
+        let id = parseInt(small_grid.id.replace(/[^0-9]/g, ''));
+        if(valid.includes(id) && (player === role || role === SPECTATOR)) {
+            small_grid.classList.add("valid");
+        } else {
+            small_grid.classList.remove("valid");
+        }
+    }
+}
+
 function handle_move(msg) {
     id = "#game-cell-" + msg.position
 
     // write move
     document.querySelector(id).innerText = msg.player;
 
-    set_turn(msg.player === 'X' ? 'O' : 'X');
+    let next_player = msg.player === 'X' ? 'O' : 'X';
 
-    // paint valid squares
-    console.log(msg.valid_squares);
-    for(const small_grid of smallGrids) {
-        let id = parseInt(small_grid.id.replace(/[^0-9]/g, ''));
-        if(msg.valid_squares.includes(id) && msg.player !== role) {
-            small_grid.classList.add("valid");
-        } else {
-            small_grid.classList.remove("valid");
-        }
-    }
+    set_turn(next_player);
+    set_valid(msg.valid_squares, next_player);
 }
 
 function handle_error(msg) {

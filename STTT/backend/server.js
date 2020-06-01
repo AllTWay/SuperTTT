@@ -17,11 +17,6 @@ var io = socket(http);
 
 var super_ttt = require("./super_ttt.js");
 var game = new super_ttt();
-
-
-console.log(game);
-
-
 var players = {};
 
 
@@ -68,7 +63,6 @@ function handle_connection(socket) {
     if(numPlayers === 0) {
         // get random symbol
         let sym = Math.random() >= 0.5 ? 'X' : 'O';
-        console.log("Player " + sym);
         players[socket.id] = sym;
     } else if(numPlayers === 1) {
         // get remaining symbol
@@ -83,7 +77,8 @@ function handle_connection(socket) {
     socket.emit('setup', {
         'role': (socket.id in players ? players[socket.id] : 'spectator'),
         'board': game.get_board(),
-        'next_player': game.get_next_player()
+        'next_player': game.get_next_player(),
+        'valid_squares': game.get_valid_squares(),
     });
 
     // console.log(players);
@@ -105,14 +100,12 @@ function handle_connection(socket) {
         let errors = game.play(player, position);
 
         if(errors.length === 0) {
-            let valid_squares = game.get_valid_squares();
-
             // TODO: inform winner
 
             io.emit('new-play', {
                 'player': player,
                 'position': position,
-                'valid_squares': valid_squares,
+                'valid_squares': game.get_valid_squares(),
             });
         } else {
             console.log("Sending error");
