@@ -51,12 +51,11 @@ body {
     font-size: 25px;
 }
 
-.status {
+.status, .reset, .role {
     color: var(--grey-700);
 }
 
 .reset {
-    color: var(--grey-700);
     cursor: pointer;
 }
 
@@ -85,9 +84,18 @@ body {
     grid-gap: 5px;
 }
 
+.valid {
+    background: var(--pink-500);
+}
+
 .game-cell {
     height: 50px;
     width: 50px;
     background: var(--grey-300);
     cursor: pointer;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 34px;
 }

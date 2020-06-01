@@ -1,5 +1,130 @@
 "use strict";
 
+const PORT = 8080;
+const FAVICON = __dirname + "/../frontend/assets/img/hashtag.png";
+const FRONTEND = __dirname + "/../frontend";
+
+var os = require("os");
+
+var express = require("express");
+var app = express();
+var http = require('http').createServer(app);
+var favicon = require("express-favicon");
+
+var socket = require("socket.io");
+var io = socket(http);
+
+
+var super_ttt = require("./super_ttt.js");
+var game = new super_ttt();
+
+
+console.log(game);
+
+
+var players = {};
+
+
+// Prevent MIME TYPE error by making html directory static and therefore usable
+app.use(express.static(FRONTEND));
+
+// set favicon
+app.use(favicon(FAVICON));
+
+// http request handling
+app.get("/", handle_main);
+app.get("*", handle_default);
+
+// socket event handling
+io.on('connection', handle_connection);
+
+
+
+// Run server
+// log_dependencies();
+http.listen(PORT, log_running);
+
+
+// ===========================================
+//             Event handlers
+// ===========================================
+
+function handle_main(req, res) {
+    res.statusCode = 200;
+    res.setHeader("Content-Type", "text/html");
+    res.sendFile("index.html", { root: __dirname });
+    res.end();
+}
+
+function handle_default(req, res) {
+    res.redirect("/");
+}
+
+function handle_connection(socket) {
+    console.log("New connection: Player " + socket.id);
+
+    // give X, O or spectator to new connection
+    let numPlayers = Object.keys(players).length
+    if(numPlayers === 0) {
+        // get random symbol
+        let sym = Math.random() >= 0.5 ? 'X' : 'O';
+        console.log("Player " + sym);
+        players[socket.id] = sym;
+    } else if(numPlayers === 1) {
+        // get remaining symbol
+        let otherId = Object.keys(players)[0];
+        let sym = players[otherId] === 'X' ? 'O' : 'X';
+        players[socket.id] = sym;
+    } else {
+        // console.log("Got spectator");
+    }
+
+    // inform client of its role
+    socket.emit('setup', {
+        'role': (socket.id in players ? players[socket.id] : 'spectator'),
+        'board': game.get_board(),
+        'next_player': game.get_next_player()
+    });
+
+    // console.log(players);
+
+
+    // handle socket events
+    // need to make anonymous function to keep
+    // a reference to the disconnected socket
+    socket.on('disconnect', () => {
+        console.log(socket.id + " disconnected");
+        if(socket.id in players) {
+            delete players[socket.id]
+        }
+    });
+
+    socket.on('play', (msg) => {
+        let player = players[socket.id];
+        let position = msg.position;
+        let errors = game.play(player, position);
+
+        if(errors.length === 0) {
+            let valid_squares = game.get_valid_squares();
+
+            // TODO: inform winner
+
+            io.emit('new-play', {
+                'player': player,
+                'position': position,
+                'valid_squares': valid_squares,
+            });
+        } else {
+            console.log("Sending error");
+            socket.emit('invalid-play', errors);
+        }
+    });
+}
+
+// ===========================================
+//      Fancy console logging by Migmac
+// ===========================================
+
 const colorModule = require("./console_colors.js");
 const color = colorModule.name;
 
@@ -10,83 +135,32 @@ const YELLOW = `${color["yellow"]}`;
 const CYAN = `${color["cyan"]}`;
 const RED = `${color["red"]}`;
 
-var logging = true;
-var log_dependencies = true;
-
-if (logging) {
-    if (log_dependencies) {
-        console.log(`${RED}Dependencies${RESET}`);
-        console.log(`${RED}  --> ${YELLOW}Express${RESET}`);
-        console.log(`${RED}  --> ${YELLOW}Express-Favicon${RESET}`);
-    }
-    console.log(".");
-    console.log("+============================+");
-    console.log(`|  Starting STTT by ${CYAN}AllTWay${RESET}  |`);
-    console.log("+==+=========================+");
-} else {
-    console.log(`Starting STTT by ${CYAN}AllTWay${RESET}`);
-}
-
-// VARIABLES
-var private_ipv4; // Server can be accessed through this ip if in the same network
-const PORT = 8080;
-
-var os = require("os");
-var fs = require("fs");
-
-var express = require("express");
-var app = express();
-var io = require("socket.io");
-var favicon = require("express-favicon");
-
-var super_ttt = require("./super_ttt.js");
-
-// LOCAL IPV4 DETECTION
-var ifaces = os.networkInterfaces();
-Object.keys(ifaces).forEach(function(ifname) {
-    var alias = 0;
-
-    ifaces[ifname].forEach(function(iface) {
-        if ("IPv4" !== iface.family || iface.internal !== false) {
-            // skips over internal (i.e. 127.0.0.1) and non-ipv4 addresses
-            return;
-        }
-
-        if (alias >= 1) {
-            // this single interface has multiple ipv4 addresses
-            // console.log(ifname + `:` + alias, iface.address);
-        } else {
-            // this interface has only one ipv4 address
-            // console.log(ifname, iface.address);
-            private_ipv4 = iface.address;
-        }
-        ++alias;
-    });
-});
-
-// START HTML SERVER
-// Prevents MIME TYPE error by making html directory static and therefore usable
-app.use(express.static(__dirname + "/../frontend"));
-
-// Favicon handler
-app.use(favicon(__dirname + "/../frontend/assets/img/hashtag.png"));
-
-// Root entry
-app.get("/", function(req, res) {
-    res.statusCode = 200;
-    res.setHeader("Content-Type", "text/html");
-    res.sendFile("index.html", { root: __dirname });
-    res.end();
-});
-
-// Redirect any incorrect path to main page
-app.get("*", function(req, res) { res.redirect(`/`); });
-
-// Run server
-app.listen(PORT, () => {
+function log_running() {
+    console.log("+===================================+");
+    console.log(`|  Starting STTT by ${CYAN}Blet&Blet Lda.${RESET}  |`);
+    console.log("+==+================================+");
     console.log("   |");
-    console.log(`   +--=[${WHITE}Private IP${RESET}]=--> ${GREEN}${private_ipv4}:${YELLOW}${PORT}${RESET}`);
+    console.log(`   +--=[${WHITE}Private IP${RESET}]=--> ${GREEN}${get_ipv4()}:${YELLOW}${PORT}${RESET}`);
     console.log("   |");
     console.log("   ."); // End Spacer
-})
-.on("error", err => console.log(err));
+}
+
+function log_dependencies() {
+    console.log(`${RED}Dependencies${RESET}`);
+    console.log(`${RED}  --> ${YELLOW}Express${RESET}`);
+    console.log(`${RED}  --> ${YELLOW}Express-Favicon${RESET}`);
+    console.log(".");
+}
+
+
+function get_ipv4() {
+    var ifaces = os.networkInterfaces();
+    for(const iface in ifaces) {
+        for(const ix in ifaces[iface]) {
+            let addr = ifaces[iface][ix];
+            if(!addr.internal && addr.family === "IPv4") {
+                return addr.address;
+            }
+        }
+    }
+}
