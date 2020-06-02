@@ -57,10 +57,14 @@ body {
 }
 
 .control {
-    display: flex;
-    justify-content: space-around;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
     margin: 25px;
     font-size: 25px;
+}
+
+.control p {
+    text-align: center;
 }
 
 .status,
