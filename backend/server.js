@@ -155,9 +155,9 @@ const CYAN = `${color["cyan"]}`;
 const RED = `${color["red"]}`;
 
 function log_running() {
-    console.log("+===================================+");
-    console.log(`|  Starting STTT by ${CYAN}Blet&Blet Lda.${RESET}  |`);
-    console.log("+==+================================+");
+    console.log("+============================+");
+    console.log(`|  Starting STTT by ${CYAN}AllTWay${RESET}  |`);
+    console.log("+==+=========================+");
     console.log("   |");
     console.log(`   +--=[${WHITE}Private IP${RESET}]=--> ${GREEN}${get_ipv4()}:${YELLOW}${PORT}${RESET}`);
     console.log("   |");
