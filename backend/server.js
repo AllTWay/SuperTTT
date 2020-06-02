@@ -17,6 +17,9 @@ var io = socket(http);
 
 var super_ttt = require("./super_ttt.js");
 var game = new super_ttt();
+
+// TODO: use server-generated cookie. the session may break and the same player may connect
+// with a different socketId.
 var players = {};
 
 
@@ -55,46 +58,54 @@ function handle_default(req, res) {
     res.redirect("/");
 }
 
-function handle_connection(socket) {
-    console.log("New connection: Player " + socket.id);
-
-    // give X, O or spectator to new connection
-    let numPlayers = Object.keys(players).length
+function get_role() {
+    // returns 'X', 'O', or false
+    let numPlayers = Object.keys(players).length;
     if(numPlayers === 0) {
-        // get random symbol
-        let sym = Math.random() >= 0.5 ? 'X' : 'O';
-        players[socket.id] = sym;
-    } else if(numPlayers === 1) {
-        // get remaining symbol
-        let otherId = Object.keys(players)[0];
-        let sym = players[otherId] === 'X' ? 'O' : 'X';
-        players[socket.id] = sym;
-    } else {
-        // console.log("Got spectator");
+        return Math.random() >= 0.5 ? 'X' : 'O';
+    } else if(numPlayers === 1){
+        return players[Object.keys(players)[0]] === 'X' ? 'O' : 'X';
+    }
+    // spectator
+    return false;
+}
+
+function handle_connection(socket) {
+    handle_connect();
+
+    // set socket event handlers
+    socket.on('disconnect', handle_disconnect);
+    socket.on('play', handle_play);
+    socket.on('reset', handle_reset);
+
+    // socket event handlers
+    function handle_connect() {
+        let sym = get_role();
+        if(sym) {
+            players[socket.id] = sym;
+        } else {
+            // console.log("Got spectator");
+        }
+
+        console.log(`New player: ${socket.id} (${sym ? sym : "Spectator"})`);
+
+        // inform client of its role and current game state
+        socket.emit('setup', {
+            'role': (socket.id in players ? players[socket.id] : 'spectator'),
+            'board': game.get_board(),
+            'next_player': game.get_next_player(),
+            'valid_squares': game.get_valid_squares(),
+        });
     }
 
-    // inform client of its role
-    socket.emit('setup', {
-        'role': (socket.id in players ? players[socket.id] : 'spectator'),
-        'board': game.get_board(),
-        'next_player': game.get_next_player(),
-        'valid_squares': game.get_valid_squares(),
-    });
-
-    // console.log(players);
-
-
-    // handle socket events
-    // need to make anonymous function to keep
-    // a reference to the disconnected socket
-    socket.on('disconnect', () => {
+    function handle_disconnect() {
         console.log(socket.id + " disconnected");
         if(socket.id in players) {
             delete players[socket.id]
         }
-    });
+    }
 
-    socket.on('play', (msg) => {
+    function handle_play(msg) {
         let player = players[socket.id];
         let position = msg.position;
         let errors = game.play(player, position);
@@ -111,7 +122,22 @@ function handle_connection(socket) {
             console.log("Sending error");
             socket.emit('invalid-play', errors);
         }
-    });
+    }
+
+    function handle_reset() {
+        if(!(socket.id in players)) {
+            console.log("Spectator resetting");
+            return;
+        }
+
+        console.log("Resetting game");
+        game.reset();
+        io.emit('state', {
+            'board': game.get_board(),
+            'next_player': game.get_next_player(),
+            'valid_squares': game.get_valid_squares(),
+        });
+    }
 }
 
 // ===========================================

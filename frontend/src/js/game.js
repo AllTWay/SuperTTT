@@ -8,11 +8,11 @@ var role;
 
 // HTML elements
 const roleDiv = document.querySelector("#role");
+const resetDiv = document.querySelector("#reset");
 const nextPlayerDiv = document.querySelector("#nextPlayer");
 
 // TODO: refactor gameCells (make array and build it with id corresponding to index)
 const gameCells = document.querySelectorAll(".game-cell");
-
 const smallGrids = document.querySelectorAll(".small-grid");
 
 
@@ -20,6 +20,7 @@ const smallGrids = document.querySelectorAll(".small-grid");
 socket.on('setup', handle_setup);
 socket.on('new-play', handle_move);
 socket.on('invalid-play', handle_error);
+socket.on('state', handle_state);
 
 
 // dom handling
@@ -27,25 +28,36 @@ for(const gameCell of gameCells) {
     gameCell.addEventListener('click', handle_play);
 }
 
+// this event listener is set when given a player
+// resetDiv.addEventListener('click', handle_reset);
+
 
 
 // handlers
 function handle_setup(msg) {
-    console.log(msg);
-    if(msg.role === 'X') {
+    if(msg.role === X) {
         role = X;
-    } else if(msg.role === 'O') {
+    } else if(msg.role === O) {
         role = O;
     } else {
         role = SPECTATOR;
     }
 
     if(role === SPECTATOR) {
+        // TODO: remove cursor pointer from squares
         roleDiv.innerText = "Spectating";
     } else {
+        resetDiv.addEventListener('click', handle_reset);
         roleDiv.innerText = "Playing as " + role;
     }
 
+    set_turn(msg.next_player);
+    set_valid(msg.valid_squares, msg.next_player);
+    set_board(msg.board);
+}
+
+function handle_state(msg) {
+    console.log("Got reset");
     set_turn(msg.next_player);
     set_valid(msg.valid_squares, msg.next_player);
     set_board(msg.board);
@@ -66,6 +78,7 @@ function set_board(board) {
 }
 
 function set_valid(valid, player) {
+    // TODO: have sorted array (by id) and access directly
     for(const small_grid of smallGrids) {
         let id = parseInt(small_grid.id.replace(/[^0-9]/g, ''));
         if(valid.includes(id) && (player === role || role === SPECTATOR)) {
@@ -82,7 +95,7 @@ function handle_move(msg) {
     // write move
     document.querySelector(id).innerText = msg.player;
 
-    let next_player = msg.player === 'X' ? 'O' : 'X';
+    let next_player = msg.player === X ? O : X;
 
     set_turn(next_player);
     set_valid(msg.valid_squares, next_player);
@@ -95,5 +108,12 @@ function handle_error(msg) {
 
 
 function handle_play(e) {
-    socket.emit('play', { 'position': parseInt(e.target.id.replace(/[^0-9]/g, '')) });
+    if(role !== SPECTATOR) {
+        socket.emit('play', { 'position': parseInt(e.target.id.replace(/[^0-9]/g, '')) });
+    }
+}
+
+function handle_reset(e) {
+    console.log("Reset!");
+    socket.emit('reset');
 }
