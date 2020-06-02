@@ -22,6 +22,30 @@ var game = new super_ttt();
 // with a different socketId.
 var players = {};
 
+var play_history = [];
+
+/*
+// TODO: REMOVE!!
+play_history = [
+  [ 'X', 20 ], [ 'O', 21 ],
+  [ 'X', 29 ], [ 'O', 24 ],
+  [ 'X', 56 ], [ 'O', 25 ],
+  [ 'X', 67 ], [ 'O', 38 ],
+  [ 'X', 26 ], [ 'O', 75 ],
+  [ 'X', 32 ], [ 'O', 45 ],
+  [ 'X', 5 ],  [ 'O', 51 ],
+  [ 'X', 59 ], [ 'O', 48 ],
+  [ 'X', 35 ], [ 'O', 72 ],
+  [ 'X', 8 ],  [ 'O', 78 ],
+  [ 'X', 58 ], [ 'O', 36 ],
+  [ 'X', 2 ]
+];
+
+for(const play of play_history) {
+    game.play(play[0], play[1]);
+}
+*/
+
 
 // Prevent MIME TYPE error by making html directory static and therefore usable
 app.use(express.static(FRONTEND));
