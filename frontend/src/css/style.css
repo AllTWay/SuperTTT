@@ -99,7 +99,7 @@ body {
 }
 
 .valid {
-    background: var(--orange-500);
+    background: var(--blue-500);
 }
 
 .game-cell {
