@@ -132,7 +132,9 @@ function handle_connection(socket) {
     function handle_play(msg) {
         let player = players[socket.id];
         let position = msg.position;
+        play_history.push([player, position]);
         let errors = game.play(player, position);
+        console.log(play_history);
 
         if(errors.length === 0) {
             // TODO: inform winner
@@ -156,6 +158,7 @@ function handle_connection(socket) {
 
         console.log("Resetting game");
         game.reset();
+        play_history = [];
         io.emit('state', {
             'board': game.get_board(),
             'next_player': game.get_next_player(),
