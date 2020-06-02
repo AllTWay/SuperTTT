@@ -21,6 +21,7 @@ socket.on('setup', handle_setup);
 socket.on('new-play', handle_move);
 socket.on('invalid-play', handle_error);
 socket.on('state', handle_state);
+socket.on('gg', handle_gg);
 
 
 // dom handling
@@ -111,6 +112,11 @@ function handle_play(e) {
     if(role !== SPECTATOR) {
         socket.emit('play', { 'position': parseInt(e.target.id.replace(/[^0-9]/g, '')) });
     }
+}
+
+function handle_gg(msg) {
+    console.log("GG");
+    console.log(msg);
 }
 
 function handle_reset(e) {

@@ -40,6 +40,10 @@ class SuperTTT {
         return this.nextPlayer;
     }
 
+    get_winner() {
+        return this.winner !== ' ' ? this.winner : false;
+    }
+
     reset() {
         this.board.reset();
         this.nextPlayer = x;

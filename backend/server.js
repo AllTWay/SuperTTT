@@ -137,13 +137,19 @@ function handle_connection(socket) {
         console.log(play_history);
 
         if(errors.length === 0) {
-            // TODO: inform winner
-
             io.emit('new-play', {
                 'player': player,
                 'position': position,
                 'valid_squares': game.get_valid_squares(),
             });
+
+            if(game.get_valid_squares().length === 0) {
+                // game over
+                console.log(`GG: ${game.get_winner() ? game.get_winner() + " wins": "Tie"}`);
+                io.emit('gg', {
+                    'winner': game.get_winner(),
+                });
+            }
         } else {
             console.log("Sending error");
             socket.emit('invalid-play', errors);
