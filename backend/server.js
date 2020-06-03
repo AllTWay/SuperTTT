@@ -22,8 +22,6 @@ var game = new super_ttt();
 // with a different socketId.
 var players = {};
 
-var play_history = [];
-
 /*
 // TODO: REMOVE!!
 play_history = [
@@ -132,9 +130,8 @@ function handle_connection(socket) {
     function handle_play(msg) {
         let player = players[socket.id];
         let position = msg.position;
-        play_history.push([player, position]);
         let errors = game.play(player, position);
-        console.log(play_history);
+        console.log(game.get_history());
 
         if(errors.length === 0) {
             io.emit('new-play', {
