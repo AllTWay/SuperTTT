@@ -22,6 +22,8 @@ var game = new super_ttt();
 // with a different socketId.
 var players = {};
 
+var game_history = [];
+
 /*
 // TODO: REMOVE!!
 play_history = [
@@ -160,8 +162,10 @@ function handle_connection(socket) {
         }
 
         console.log("Creating new game");
-        game.reset();
-        play_history = [];
+        game_history.push(game.get_history());
+        game = new super_ttt();
+        console.log("New game. History: ");
+        console.log(game_history);
         io.emit('state', {
             'board': game.get_board(),
             'next_player': game.get_next_player(),
