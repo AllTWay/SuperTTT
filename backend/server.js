@@ -100,7 +100,7 @@ function handle_connection(socket) {
     // set socket event handlers
     socket.on('disconnect', handle_disconnect);
     socket.on('play', handle_play);
-    socket.on('reset', handle_reset);
+    socket.on('new-game', handle_new_game);
 
     // socket event handlers
     function handle_connect() {
@@ -156,13 +156,13 @@ function handle_connection(socket) {
         }
     }
 
-    function handle_reset() {
+    function handle_new_game() {
         if(!(socket.id in players)) {
-            console.log("Spectator resetting");
+            console.log("Spectator asking for a new game");
             return;
         }
 
-        console.log("Resetting game");
+        console.log("Creating new game");
         game.reset();
         play_history = [];
         io.emit('state', {

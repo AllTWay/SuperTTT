@@ -68,16 +68,16 @@ body {
 }
 
 .status,
-.reset,
+.new-game,
 .role {
     color: var(--grey-700);
 }
 
-.reset {
+.new-game {
     cursor: pointer;
 }
 
-.reset:hover {
+.new-game:hover {
     color: var(--pink-500);
 }
 
