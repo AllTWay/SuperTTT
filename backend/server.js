@@ -34,8 +34,6 @@ var game = new super_ttt();
 // with a different socketId.
 var players = {};
 
-var game_history = [];
-
 // Prevent MIME TYPE error by making html directory static and therefore usable
 app.use(express.static(FRONTEND));
 
