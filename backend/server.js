@@ -4,6 +4,8 @@ const PORT = 8080;
 const FAVICON = __dirname + "/../frontend/assets/img/hashtag.png";
 const FRONTEND = __dirname + "/../frontend";
 
+
+// server
 var os = require("os");
 
 var express = require("express");
@@ -15,13 +17,22 @@ var socket = require("socket.io");
 var io = socket(http);
 
 
+// database
+const firebase = require("firebase/app");
+require('firebase/database');
+var firebaseConfig = require("./firebase_config.js");
+firebase.initializeApp(firebaseConfig);
+var database = firebase.database();
+
+
+// game
 var super_ttt = require("./super_ttt.js");
 var game = new super_ttt();
+
 
 // TODO: use server-generated cookie. the session may break and the same player may connect
 // with a different socketId.
 var players = {};
-
 
 // Prevent MIME TYPE error by making html directory static and therefore usable
 app.use(express.static(FRONTEND));
@@ -31,6 +42,7 @@ app.use(favicon(FAVICON));
 
 // http request handling
 app.get("/", handle_main);
+app.get("/games", handle_games);
 app.get("*", handle_default);
 
 // socket event handling
@@ -52,6 +64,13 @@ function handle_main(req, res) {
     res.setHeader("Content-Type", "text/html");
     res.sendFile("index.html", { root: __dirname });
     res.end();
+}
+
+async function handle_games(req, res) {
+    res.statusCode = 200;
+    res.setHeader("Content-Type", "application/json");
+    let hist = await get_all_games();
+    res.json(hist);
 }
 
 function handle_default(req, res) {
@@ -76,7 +95,7 @@ function handle_connection(socket) {
     // set socket event handlers
     socket.on('disconnect', handle_disconnect);
     socket.on('play', handle_play);
-    socket.on('reset', handle_reset);
+    socket.on('new-game', handle_new_game);
 
     // socket event handlers
     function handle_connect() {
@@ -108,30 +127,40 @@ function handle_connection(socket) {
     function handle_play(msg) {
         let player = players[socket.id];
         let position = msg.position;
+
         let errors = game.play(player, position);
+        console.log(game.get_history());
 
         if(errors.length === 0) {
-            // TODO: inform winner
-
             io.emit('new-play', {
                 'player': player,
                 'position': position,
                 'valid_squares': game.get_valid_squares(),
             });
+
+            if(game.get_valid_squares().length === 0) {
+                // game over
+                console.log(`GG: ${game.get_winner() ? game.get_winner() + " wins": "Tie"}`);
+                io.emit('gg', {
+                    'winner': game.get_winner(),
+                });
+            }
         } else {
             console.log("Sending error");
             socket.emit('invalid-play', errors);
         }
     }
 
-    function handle_reset() {
+    function handle_new_game() {
         if(!(socket.id in players)) {
-            console.log("Spectator resetting");
+            console.log("Spectator asking for a new game");
             return;
         }
 
-        console.log("Resetting game");
-        game.reset();
+        persist_game(game);
+
+        console.log("Creating new game");
+        game = new super_ttt();
         io.emit('state', {
             'board': game.get_board(),
             'next_player': game.get_next_player(),
@@ -139,6 +168,31 @@ function handle_connection(socket) {
         });
     }
 }
+
+// ===========================================
+//             Database stuff
+// ===========================================
+async function persist_game(game) {
+    console.log("Saving game")
+    let winner = game.get_winner();
+    if(!winner) {
+        winner = "Tie";
+    }
+
+    let data = {
+        timestamp: Date.now(),
+        winner: winner,
+        moves: game.get_history()
+    }
+
+    database.ref('games').push(data);
+}
+
+async function get_all_games() {
+    let history = await database.ref('games').once('value');
+    return history.val();
+}
+
 
 // ===========================================
 //      Fancy console logging by Migmac

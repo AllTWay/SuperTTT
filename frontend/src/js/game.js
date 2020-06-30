@@ -8,7 +8,7 @@ var role;
 
 // HTML elements
 const roleDiv = document.querySelector("#role");
-const resetDiv = document.querySelector("#reset");
+const newGameDiv = document.querySelector("#new-game");
 const nextPlayerDiv = document.querySelector("#nextPlayer");
 
 // TODO: refactor gameCells (make array and build it with id corresponding to index)
@@ -21,17 +21,13 @@ socket.on('setup', handle_setup);
 socket.on('new-play', handle_move);
 socket.on('invalid-play', handle_error);
 socket.on('state', handle_state);
+socket.on('gg', handle_gg);
 
 
 // dom handling
 for(const gameCell of gameCells) {
     gameCell.addEventListener('click', handle_play);
 }
-
-// this event listener is set when given a player
-// resetDiv.addEventListener('click', handle_reset);
-
-
 
 // handlers
 function handle_setup(msg) {
@@ -47,7 +43,7 @@ function handle_setup(msg) {
         // TODO: remove cursor pointer from squares
         roleDiv.innerText = "Spectating";
     } else {
-        resetDiv.addEventListener('click', handle_reset);
+        newGameDiv.addEventListener('click', handle_new_game);
         roleDiv.innerText = "Playing as " + role;
     }
 
@@ -57,7 +53,7 @@ function handle_setup(msg) {
 }
 
 function handle_state(msg) {
-    console.log("Got reset");
+    console.log("Got new game");
     set_turn(msg.next_player);
     set_valid(msg.valid_squares, msg.next_player);
     set_board(msg.board);
@@ -113,7 +109,11 @@ function handle_play(e) {
     }
 }
 
-function handle_reset(e) {
-    console.log("Reset!");
-    socket.emit('reset');
+function handle_gg(msg) {
+    document.querySelector(`#role`).innerText = `${msg.winner} wins!`;
+}
+
+function handle_new_game(e) {
+    console.log("New Game!");
+    socket.emit('new-game');
 }
