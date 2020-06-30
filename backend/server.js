@@ -15,8 +15,18 @@ var socket = require("socket.io");
 var io = socket(http);
 
 
+// database
+const firebase = require("firebase/app");
+require('firebase/database');
+var firebaseConfig = require("./firebase_config.js");
+firebase.initializeApp(firebaseConfig);
+var database = firebase.database();
+
+
+// game
 var super_ttt = require("./super_ttt.js");
 var game = new super_ttt();
+
 
 // TODO: use server-generated cookie. the session may break and the same player may connect
 // with a different socketId.
@@ -24,9 +34,9 @@ var players = {};
 
 var game_history = [];
 
-/*
 // TODO: REMOVE!!
-play_history = [
+/*
+let play_history = [
   [ 'X', 20 ], [ 'O', 21 ],
   [ 'X', 29 ], [ 'O', 24 ],
   [ 'X', 56 ], [ 'O', 25 ],
@@ -40,11 +50,20 @@ play_history = [
   [ 'X', 58 ], [ 'O', 36 ],
   [ 'X', 2 ]
 ];
-
-for(const play of play_history) {
-    game.play(play[0], play[1]);
-}
 */
+let play_history = [
+    20, 21, 29, 24, 56, 25, 67, 38,
+    26, 75, 32, 45,  5, 51, 59, 48,
+    35, 72,  8, 78, 58, 36,  2
+]
+
+for(let i = 0; i < play_history.length; i++) {
+    game.play(i%2 == 0 ? 'X' : 'O', play_history[i]);
+}
+
+// for(const play of play_history) {
+    // game.play(play[0], play[1]);
+// }
 
 
 // Prevent MIME TYPE error by making html directory static and therefore usable
@@ -161,11 +180,10 @@ function handle_connection(socket) {
             return;
         }
 
+        persist_game(game);
+
         console.log("Creating new game");
-        game_history.push(game.get_history());
         game = new super_ttt();
-        console.log("New game. History: ");
-        console.log(game_history);
         io.emit('state', {
             'board': game.get_board(),
             'next_player': game.get_next_player(),
@@ -173,6 +191,32 @@ function handle_connection(socket) {
         });
     }
 }
+
+// ===========================================
+//             Database stuff
+// ===========================================
+async function persist_game(game) {
+    console.log("Saving game")
+    let winner = game.get_winner();
+    if(!winner) {
+        winner = "Tie";
+    }
+
+    let data = {
+        timestamp: Date.now(),
+        winner: winner,
+        moves: game.get_history()
+    }
+
+    console.log(data);
+    database.ref('games').push(data);
+}
+
+async function get_all_games() {
+    let history = await database.ref('games').once('value');
+    return history.val();
+}
+
 
 // ===========================================
 //      Fancy console logging by Migmac
