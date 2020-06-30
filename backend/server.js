@@ -185,7 +185,6 @@ async function persist_game(game) {
         moves: game.get_history()
     }
 
-    console.log(data);
     database.ref('games').push(data);
 }
 
