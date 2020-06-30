@@ -110,9 +110,7 @@ function handle_play(e) {
 }
 
 function handle_gg(msg) {
-    console.log("GG");
-    // TODO: inform winner in status div
-    console.log(msg);
+    document.querySelector(`#role`).innerText = `${msg.winner} wins!`;
 }
 
 function handle_new_game(e) {
