@@ -4,6 +4,8 @@ const PORT = 8080;
 const FAVICON = __dirname + "/../frontend/assets/img/hashtag.png";
 const FRONTEND = __dirname + "/../frontend";
 
+
+// server
 var os = require("os");
 
 var express = require("express");
@@ -74,6 +76,7 @@ app.use(favicon(FAVICON));
 
 // http request handling
 app.get("/", handle_main);
+app.get("/games", handle_games);
 app.get("*", handle_default);
 
 // socket event handling
@@ -95,6 +98,13 @@ function handle_main(req, res) {
     res.setHeader("Content-Type", "text/html");
     res.sendFile("index.html", { root: __dirname });
     res.end();
+}
+
+async function handle_games(req, res) {
+    res.statusCode = 200;
+    res.setHeader("Content-Type", "application/json");
+    let hist = await get_all_games();
+    res.json(hist);
 }
 
 function handle_default(req, res) {
@@ -151,6 +161,7 @@ function handle_connection(socket) {
     function handle_play(msg) {
         let player = players[socket.id];
         let position = msg.position;
+
         let errors = game.play(player, position);
         console.log(game.get_history());
 
