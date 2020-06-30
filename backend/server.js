@@ -70,7 +70,7 @@ async function handle_games(req, res) {
     res.statusCode = 200;
     res.setHeader("Content-Type", "application/json");
     let hist = await get_all_games();
-    res.json(hist);
+    res.send(JSON.stringify(hist, null, 4));
 }
 
 function handle_default(req, res) {
