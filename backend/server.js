@@ -172,6 +172,7 @@ function handle_connection(socket) {
 // ===========================================
 //             Database stuff
 // ===========================================
+
 async function persist_game(game) {
     console.log("Saving game")
     let winner = game.get_winner();
