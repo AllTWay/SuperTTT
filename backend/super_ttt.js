@@ -17,7 +17,7 @@ class SuperTTT {
     reset() {
         this.board.reset();
         this.nextPlayer = x;
-        this.winner = ' ';
+        this.winner = ' '; // needs to be like this (recursion)
         this.history = [];
 
         this.valid_plays = this.board.all_valid_plays();
@@ -80,20 +80,21 @@ class SuperTTT {
         }
 
         this.board.play(this.nextPlayer, position);
-        this.history.push([player, position]);
+        // this.history.push([player, position]);
+        this.history.push(position); // save only the position
 
         this.nextPlayer = (this.nextPlayer === x ? o : x);
         this.valid_plays = this.board.calc_valid_plays(position);
         this.winner = this.board.get_winner();
 
 
-        console.log("New board:");
-        console.log(this.board.toArray());
-        console.log("Winner? " + this.board.get_winner());
+        // console.log("New board:");
+        // console.log(this.board.toArray());
+        // console.log("Winner? " + this.board.get_winner());
         console.log("Valid moves:");
         console.log(this.valid_plays);
-        console.log("Valid squares:");
-        console.log(this.get_valid_squares());
+        // console.log("Valid squares:");
+        // console.log(this.get_valid_squares());
 
         return []; // no errors! :D
     }
