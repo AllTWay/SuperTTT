@@ -21,7 +21,7 @@ All you need to do after this is drag/copy the `bootstrap.css` to your html file
 
 ---
 
-### If you get this error when doing `scss custom.scss bootstrap.css`: 
+#### If you get this error when doing `scss custom.scss bootstrap.css`: 
 
 
 ```sass : File ...\AppData\Roaming\npm\sass.ps1 cannot be loaded. The file ...\AppData\Roaming\npm\sass.ps1 is not digitally signed. You cannot run this script on the current system.```
