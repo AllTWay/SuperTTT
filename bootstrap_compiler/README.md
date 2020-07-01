@@ -14,18 +14,16 @@ Edit the `custom.scss` file and add/change the `!default` variables you want fro
 
 Once you have added/changed all you wanted, do the following command in terminal:
 `scss custom.scss bootstrap.css`
-This will create/override the `bootstrap.css` file with bootstrap compiled and in one single `.css` file.
+This will create/override the `bootstrap.css` and `bootstrap.css.map` files with bootstrap compiled and in one single `.css` file.
 
-All you need to do after this is drag/copy the `bootstrap.css` to your html files directory and add it to the sources. 
+All you need to do after this is drag/copy `bootstrap.css` and `bootstrap.css.map` to your html files directory and add `bootstrap.css` to the sources. 
 - Example: ```<link rel="stylesheet" href="src/css/bootstrap.css">```
 
 ---
 
-### If you get this error when doing `scss custom.scss bootstrap.css`: 
+#### If you get this error when doing `scss custom.scss bootstrap.css`: 
 
-<div class="text-red">
-sass : File ...\AppData\Roaming\npm\sass.ps1 cannot be loaded. The file ...\AppData\Roaming\npm\sass.ps1 is not digitally signed. You cannot run this script on the current system.
-</div>
+```sass : File ...\AppData\Roaming\npm\sass.ps1 cannot be loaded. The file ...\AppData\Roaming\npm\sass.ps1 is not digitally signed. You cannot run this script on the current system.```
 
 #### Solution:
 
