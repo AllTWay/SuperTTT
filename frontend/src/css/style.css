@@ -116,3 +116,17 @@ body {
     align-items: center;
     font-size: 34px;
 }
+
+.pb_btn-pill {
+    border-radius: 50px;
+    padding-left: 40px;
+    padding-right: 40px;
+}
+
+.pb_font-14 {
+    font-size: 14px;
+}
+
+.pb_letter-spacing-1 {
+    letter-spacing: 0.1em;
+}
