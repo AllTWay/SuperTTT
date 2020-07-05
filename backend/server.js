@@ -5,7 +5,7 @@ const FAVICON = __dirname + "/../frontend/assets/img/hashtag.png";
 const FRONTEND = __dirname + "/../frontend";
 
 
-// server
+// Server
 var os = require("os");
 
 var express = require("express");
@@ -17,7 +17,7 @@ var socket = require("socket.io");
 var io = socket(http);
 
 
-// database
+// Database
 const firebase = require("firebase/app");
 require('firebase/database');
 var firebaseConfig = require("./firebase_config.js");
@@ -25,7 +25,7 @@ firebase.initializeApp(firebaseConfig);
 var database = firebase.database();
 
 
-// game
+// Game
 var super_ttt = require("./super_ttt.js");
 var game = new super_ttt();
 
@@ -37,15 +37,15 @@ var players = {};
 // Prevent MIME TYPE error by making html directory static and therefore usable
 app.use(express.static(FRONTEND));
 
-// set favicon
+// Set favicon
 app.use(favicon(FAVICON));
 
-// http request handling
+// HTTP request handling
 app.get("/", handle_main);
 app.get("/games", handle_games);
 app.get("*", handle_default);
 
-// socket event handling
+// Socket event handling
 io.on('connection', handle_connection);
 
 
@@ -70,7 +70,7 @@ async function handle_games(req, res) {
     res.statusCode = 200;
     res.setHeader("Content-Type", "application/json");
     let hist = await get_all_games();
-    res.json(hist);
+    res.send(JSON.stringify(hist, null, 4));
 }
 
 function handle_default(req, res) {
@@ -92,12 +92,12 @@ function get_role() {
 function handle_connection(socket) {
     handle_connect();
 
-    // set socket event handlers
+    // Set socket event handlers
     socket.on('disconnect', handle_disconnect);
     socket.on('play', handle_play);
     socket.on('new-game', handle_new_game);
 
-    // socket event handlers
+    // Socket event handlers
     function handle_connect() {
         let sym = get_role();
         if(sym) {
@@ -108,7 +108,7 @@ function handle_connection(socket) {
 
         console.log(`New player: ${socket.id} (${sym ? sym : "Spectator"})`);
 
-        // inform client of its role and current game state
+        // Inform client of its role and current game state
         socket.emit('setup', {
             'role': (socket.id in players ? players[socket.id] : 'spectator'),
             'board': game.get_board(),
@@ -172,6 +172,8 @@ function handle_connection(socket) {
 // ===========================================
 //             Database stuff
 // ===========================================
+
+
 async function persist_game(game) {
     console.log("Saving game")
     let winner = game.get_winner();
@@ -193,10 +195,10 @@ async function get_all_games() {
     return history.val();
 }
 
-
 // ===========================================
 //      Fancy console logging by Migmac
 // ===========================================
+
 
 const colorModule = require("./console_colors.js");
 const color = colorModule.name;
