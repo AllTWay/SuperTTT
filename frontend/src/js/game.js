@@ -80,7 +80,9 @@ function set_valid(valid, player) {
         let id = parseInt(small_grid.id.replace(/[^0-9]/g, ''));
         if (valid.includes(id) && (player === role || role === SPECTATOR)) {
             small_grid.classList.add("bg-blue-500");
+            small_grid.classList.remove("bg-grey-700");
         } else {
+            small_grid.classList.add("bg-grey-700");
             small_grid.classList.remove("bg-blue-500");
         }
     }
