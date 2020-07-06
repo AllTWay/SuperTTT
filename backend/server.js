@@ -27,12 +27,18 @@ var database = firebase.database();
 
 // Game
 var super_ttt = require("./super_ttt.js");
-var game = new super_ttt();
 
-
-// TODO: use server-generated cookie. the session may break and the same player may connect
-// with a different socketId.
 var players = {};
+var queue = [];
+
+function print_queue() {
+    let res = [];
+    for(let p of queue) {
+        res.push(p.id);
+    }
+    console.log(`[*] Queue:`);
+    console.log(res);
+}
 
 // Prevent MIME TYPE error by making html directory static and therefore usable
 app.use(express.static(FRONTEND));
@@ -77,18 +83,6 @@ function handle_default(req, res) {
     res.redirect("/");
 }
 
-function get_role() {
-    // returns 'X', 'O', or false
-    let numPlayers = Object.keys(players).length;
-    if(numPlayers === 0) {
-        return Math.random() >= 0.5 ? 'X' : 'O';
-    } else if(numPlayers === 1){
-        return players[Object.keys(players)[0]] === 'X' ? 'O' : 'X';
-    }
-    // spectator
-    return false;
-}
-
 function handle_connection(socket) {
     handle_connect();
 
@@ -99,18 +93,43 @@ function handle_connection(socket) {
 
     // Socket event handlers
     function handle_connect() {
-        let sym = get_role();
-        if(sym) {
-            players[socket.id] = sym;
+        console.log(`[+] New connection: ${socket.id}`)
+
+        if(queue.length == 0) {
+            queue.push(socket);
+
         } else {
-            // console.log("Got spectator");
+            let p1 = queue.shift();
+            let p2 = socket;
+
+            let game = new super_ttt();
+            let room = `room_${p1.id}`;
+            let roles = Math.random() >= 0.5 ? ['X', 'O'] : ['O', 'X'];
+
+            register_player(p1, room, game, roles[0], p2.id);
+            register_player(p2, room, game, roles[1], p1.id);
+
+            p1.join(room);
+            p2.join(room);
+
+            console.log(`[+] Match found: ${p1.id} vs ${p2.id}`);
+            // console.log(players);
         }
 
-        console.log(`New player: ${socket.id} (${sym ? sym : "Spectator"})`);
+        print_queue();
+    }
 
-        // Inform client of its role and current game state
-        socket.emit('setup', {
-            'role': (socket.id in players ? players[socket.id] : 'spectator'),
+    function register_player(psock, room, game, role, opponent) {
+        players[psock.id] = {
+            'room': room,
+            'game': game,
+            'role': role,
+            'opponent': opponent
+        };
+
+        // inform client of its role and current game state
+        psock.emit('setup', {
+            'role': role,
             'board': game.get_board(),
             'next_player': game.get_next_player(),
             'valid_squares': game.get_valid_squares(),
@@ -118,21 +137,40 @@ function handle_connection(socket) {
     }
 
     function handle_disconnect() {
-        console.log(socket.id + " disconnected");
-        if(socket.id in players) {
-            delete players[socket.id]
+        // TODO: ??? what happens when playing disconnects?
+
+        // if(socket.id in players) {
+            // delete players[socket.id]
+        // }
+
+        // remove from queue
+        for(let i = 0; i < queue.length; i++) {
+            if(queue[i].id === socket.id) {
+                queue.splice(i, 1);
+            }
         }
+
+        console.log(`[-] ${socket.id} disconnected`);
+        print_queue();
     }
 
     function handle_play(msg) {
-        let player = players[socket.id];
+        if(!(socket.id in players)) {
+            // player is not playing!
+            console.log("Non-player tried to play!");
+            return;
+        }
+
+        let player = players[socket.id].role;
         let position = msg.position;
+        let game = players[socket.id].game;
+        let room = players[socket.id].room;
 
         let errors = game.play(player, position);
-        console.log(game.get_history());
+        // console.log(game.get_history());
 
         if(errors.length === 0) {
-            io.emit('new-play', {
+            io.to(room).emit('new-play', {
                 'player': player,
                 'position': position,
                 'valid_squares': game.get_valid_squares(),
@@ -141,7 +179,7 @@ function handle_connection(socket) {
             if(game.get_valid_squares().length === 0) {
                 // game over
                 console.log(`GG: ${game.get_winner() ? game.get_winner() + " wins": "Tie"}`);
-                io.emit('gg', {
+                io.to(room).emit('gg', {
                     'winner': game.get_winner(),
                 });
             }
@@ -157,10 +195,15 @@ function handle_connection(socket) {
             return;
         }
 
-        persist_game(game);
+        persist_game(players[socket.id].game);
 
         console.log("Creating new game");
-        game = new super_ttt();
+
+        let game = new super_ttt();
+        let opponent = players[socket.id].opponent;
+        players[socket.id].game = game;
+        players[opponent].game = game;
+
         io.emit('state', {
             'board': game.get_board(),
             'next_player': game.get_next_player(),
