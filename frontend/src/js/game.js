@@ -14,8 +14,6 @@ const nextPlayerDiv = document.querySelector("#nextPlayer");
 // TODO: refactor gameCells (make array and build it with id corresponding to index)
 const gameCells = document.querySelectorAll(".game-cell");
 const smallGrids = document.querySelectorAll(".small-grid");
-const newGames = document.querySelectorAll(".new-game");
-// const newGame = document.querySelectorAll(".new-game");
 
 // socket handling
 socket.on('setup', handle_setup);
