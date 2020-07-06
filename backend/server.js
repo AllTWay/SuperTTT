@@ -27,11 +27,7 @@ var database = firebase.database();
 
 // Game
 var super_ttt = require("./super_ttt.js");
-// var game = new super_ttt(); // TODO: remove
 
-
-// TODO: use server-generated cookie. the session may break and the same player may connect
-// with a different socketId.
 var players = {};
 var queue = [];
 
@@ -117,7 +113,7 @@ function handle_connection(socket) {
             p2.join(room);
 
             console.log(`[+] Match found: ${p1.id} vs ${p2.id}`);
-            console.log(players);
+            // console.log(players);
         }
 
         print_queue();
@@ -130,8 +126,6 @@ function handle_connection(socket) {
             'role': role,
             'opponent': opponent
         };
-
-        console.log(`registering ${psock.id}: ${players[psock.id].role}`);
 
         // inform client of its role and current game state
         psock.emit('setup', {
