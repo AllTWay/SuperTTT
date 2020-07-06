@@ -15,7 +15,6 @@ const nextPlayerDiv = document.querySelector("#nextPlayer");
 const gameCells = document.querySelectorAll(".game-cell");
 const smallGrids = document.querySelectorAll(".small-grid");
 
-
 // socket handling
 socket.on('setup', handle_setup);
 socket.on('new-play', handle_move);
@@ -25,25 +24,27 @@ socket.on('gg', handle_gg);
 
 
 // dom handling
-for(const gameCell of gameCells) {
+for (const gameCell of gameCells) {
     gameCell.addEventListener('click', handle_play);
 }
 
 // handlers
 function handle_setup(msg) {
-    if(msg.role === X) {
+    if (msg.role === X) {
         role = X;
-    } else if(msg.role === O) {
+    } else if (msg.role === O) {
         role = O;
     } else {
         role = SPECTATOR;
     }
 
-    if(role === SPECTATOR) {
+    if (role === SPECTATOR) {
         // TODO: remove cursor pointer from squares
         roleDiv.innerText = "Spectating";
     } else {
-        newGameDiv.addEventListener('click', handle_new_game);
+        newGameDiv.addEventListener('click', handle_new_game_click);
+        newGameDiv.addEventListener('mouseover', handle_new_game_over);
+        newGameDiv.addEventListener('mouseout', handle_new_game_out);
         roleDiv.innerText = "Playing as " + role;
     }
 
@@ -60,7 +61,7 @@ function handle_state(msg) {
 }
 
 function set_turn(player) {
-    if(role === SPECTATOR || player !== role) {
+    if (role === SPECTATOR || player !== role) {
         nextPlayerDiv.innerText = `${player} turn`;
     } else {
         nextPlayerDiv.innerText = "Your turn";
@@ -68,19 +69,19 @@ function set_turn(player) {
 }
 
 function set_board(board) {
-    for(let i = 0; i < 81; i++) {
+    for (let i = 0; i < 81; i++) {
         document.querySelector(`#game-cell-${i}`).innerText = board[i];
     }
 }
 
 function set_valid(valid, player) {
     // TODO: have sorted array (by id) and access directly
-    for(const small_grid of smallGrids) {
+    for (const small_grid of smallGrids) {
         let id = parseInt(small_grid.id.replace(/[^0-9]/g, ''));
-        if(valid.includes(id) && (player === role || role === SPECTATOR)) {
-            small_grid.classList.add("valid");
+        if (valid.includes(id) && (player === role || role === SPECTATOR)) {
+            small_grid.classList.add("bg-blue-500");
         } else {
-            small_grid.classList.remove("valid");
+            small_grid.classList.remove("bg-blue-500");
         }
     }
 }
@@ -104,7 +105,7 @@ function handle_error(msg) {
 
 
 function handle_play(e) {
-    if(role !== SPECTATOR) {
+    if (role !== SPECTATOR) {
         socket.emit('play', { 'position': parseInt(e.target.id.replace(/[^0-9]/g, '')) });
     }
 }
@@ -113,7 +114,15 @@ function handle_gg(msg) {
     document.querySelector(`#role`).innerText = `${msg.winner} wins!`;
 }
 
-function handle_new_game(e) {
+function handle_new_game_click(e) {
     console.log("New Game!");
     socket.emit('new-game');
+}
+
+function handle_new_game_over(e) {
+    newGameDiv.classList.add('text-pink-500');
+}
+
+function handle_new_game_out(e) {
+    newGameDiv.classList.remove('text-pink-500');
 }
