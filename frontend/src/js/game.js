@@ -12,8 +12,17 @@ const newGameDiv = document.querySelector("#new-game");
 const nextPlayerDiv = document.querySelector("#nextPlayer");
 
 // TODO: refactor gameCells (make array and build it with id corresponding to index)
-const gameCells = document.querySelectorAll(".game-cell");
-const smallGrids = document.querySelectorAll(".small-grid");
+
+const gameContainers = document.querySelectorAll('[id^=game-container]');
+const titles = document.querySelectorAll('[id^=title]');
+const roles = document.querySelectorAll('[id^=role]');
+const gameGrids = document.querySelectorAll('[id^=game-grid]');
+const superCells = document.querySelectorAll('[id^=super-cell]');
+const smallGrids = document.querySelectorAll('[id^=small-grid]');
+const gameCells = document.querySelectorAll('[id^=game-cell]');
+
+// const gameCells = document.querySelectorAll(".game-cell");
+// const smallGrids = document.querySelectorAll(".small-grid");
 
 // socket handling
 socket.on('setup', handle_setup);
@@ -23,12 +32,25 @@ socket.on('state', handle_state);
 socket.on('gg', handle_gg);
 
 
-// dom handling
+assignColors();
+
+// Default colors
+function assignColors() {
+    changeColorAll(gameContainers, 'bg-grey-300', 'bg');
+    changeColorAll(titles, 'text-grey-700', 'text');
+    changeColorAll(roles, 'text-grey-700', 'text');
+    changeColorAll(gameGrids, 'bg-grey-700', 'bg');
+    changeColorAll(superCells, 'bg-grey-300', 'bg');
+    changeColorAll(smallGrids, 'bg-grey-700', 'bg');
+    changeColorAll(gameCells, 'bg-grey-300', 'bg');
+}
+
+// Dom handling
 for (const gameCell of gameCells) {
     gameCell.addEventListener('click', handle_play);
 }
 
-// handlers
+// Handlers
 function handle_setup(msg) {
     if (msg.role === X) {
         role = X;
@@ -79,11 +101,9 @@ function set_valid(valid, player) {
     for (const small_grid of smallGrids) {
         let id = parseInt(small_grid.id.replace(/[^0-9]/g, ''));
         if (valid.includes(id) && (player === role || role === SPECTATOR)) {
-            small_grid.classList.add("bg-blue-500");
-            small_grid.classList.remove("bg-grey-700");
+            changeColor(small_grid, 'bg-blue-500', 'bg');
         } else {
-            small_grid.classList.add("bg-grey-700");
-            small_grid.classList.remove("bg-blue-500");
+            changeColor(small_grid, 'bg-grey-700', 'bg');
         }
     }
 }
@@ -91,7 +111,7 @@ function set_valid(valid, player) {
 function handle_move(msg) {
     id = "#game-cell-" + msg.position
 
-    // write move
+    // Write move
     document.querySelector(id).innerText = msg.player;
 
     let next_player = msg.player === X ? O : X;
@@ -127,4 +147,22 @@ function handle_new_game_over(e) {
 
 function handle_new_game_out(e) {
     newGameDiv.classList.remove('text-pink-500');
+}
+
+function changeColorAll(selection, color, remove) {
+    for (const obj of selection) {
+        removeClassByPrefix(obj, remove);
+        obj.classList.add(color);
+    }
+}
+
+function changeColor(selection, color, remove) {
+    removeClassByPrefix(selection, remove);
+    selection.classList.add(color);
+}
+
+function removeClassByPrefix(node, prefix) {
+    var regx = new RegExp('\\b' + prefix + '[^ ]*[ ]?\\b', 'g');
+    node.className = node.className.replace(regx, '');
+    return node;
 }
