@@ -106,13 +106,16 @@ function handle_connection(socket) {
             let room = `room_${p1.id}`;
             let roles = Math.random() >= 0.5 ? ['X', 'O'] : ['O', 'X'];
 
-            register_player(p1, room, game, roles[0], p2.id);
-            register_player(p2, room, game, roles[1], p1.id);
+            // abstractions. wooo
+            let p1_id = p1.id;
+            let p2_id = p2.id;
+            register_player(p1, room, game, roles[0], p2_id);
+            register_player(p2, room, game, roles[1], p1_id);
 
             p1.join(room);
             p2.join(room);
 
-            console.log(`[+] Match found: ${p1.id} vs ${p2.id}`);
+            console.log(`[+] Match found: ${p1_id} vs ${p2_id}`);
             // console.log(players);
         }
 
@@ -120,7 +123,8 @@ function handle_connection(socket) {
     }
 
     function register_player(psock, room, game, role, opponent) {
-        players[psock.id] = {
+        let player_id = psock.id; // may change later
+        players[player_id] = {
             'room': room,
             'game': game,
             'role': role,
@@ -144,27 +148,30 @@ function handle_connection(socket) {
         // }
 
         // remove from queue
+        let player_id = socket.id
         for(let i = 0; i < queue.length; i++) {
-            if(queue[i].id === socket.id) {
+            if(queue[i].id === player_id) {
                 queue.splice(i, 1);
             }
         }
 
-        console.log(`[-] ${socket.id} disconnected`);
+        console.log(`[-] ${player_id} disconnected`);
         print_queue();
     }
 
     function handle_play(msg) {
-        if(!(socket.id in players)) {
+        let player_id = socket.id;
+        if(!(player_id in players)) {
             // player is not playing!
             console.log("Non-player tried to play!");
             return;
         }
 
-        let player = players[socket.id].role;
+        let player_id = socket.id;
+        let player = players[player_id].role;
         let position = msg.position;
-        let game = players[socket.id].game;
-        let room = players[socket.id].room;
+        let game = players[player_id].game;
+        let room = players[player_id].room;
 
         let errors = game.play(player, position);
         // console.log(game.get_history());
@@ -190,18 +197,19 @@ function handle_connection(socket) {
     }
 
     function handle_new_game() {
-        if(!(socket.id in players)) {
+        let player_id = socket.id;
+        if(!(player_id in players)) {
             console.log("Spectator asking for a new game");
             return;
         }
 
-        persist_game(players[socket.id].game);
+        persist_game(players[player_id].game);
 
         console.log("Creating new game");
 
         let game = new super_ttt();
-        let opponent = players[socket.id].opponent;
-        players[socket.id].game = game;
+        let opponent = players[player_id].opponent;
+        players[player_id].game = game;
         players[opponent].game = game;
 
         io.emit('state', {
