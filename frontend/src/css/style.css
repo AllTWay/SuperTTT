@@ -10,10 +10,14 @@ body {
     justify-content: center;
 }
 
-.container {
+.game-container {
     border-radius: 25px;
     margin: 50px;
     padding: 50px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    max-width: 700px;
 }
 
 .title {
@@ -25,6 +29,7 @@ body {
     grid-template-columns: repeat(3, 1fr);
     margin: 25px;
     font-size: 25px;
+    height: 50px;
 }
 
 .control p {
@@ -37,9 +42,12 @@ body {
 
 .game-grid {
     display: grid;
+    align-self: center;
     grid-template-columns: repeat(3, 1fr);
     grid-template-rows: repeat(3, 1fr);
     grid-gap: 15px;
+    max-width: 600px;
+    max-height: 600px;
 }
 
 .super-cell {

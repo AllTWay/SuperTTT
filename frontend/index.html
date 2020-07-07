@@ -1,4 +1,5 @@
-<!DOCTYPE html> <html>
+<!DOCTYPE html>
+<html>
 
 <head>
     <title>Super Tic-Tac-Toe</title>
@@ -15,135 +16,135 @@
 
 <body>
 
-    <div class="container bg-grey-300">
-        <h1 class="title text-grey-700">Super Tic Tac Toe</h1>
+    <div class="game-container" id="game-container-0">
+        <h1 class="title" id="title-0">Super Tic Tac Toe</h1>
         <div class="control">
             <div class="status">
                 <p id="nextPlayer">X turn</p>
             </div>
-            <div class="role text-grey-700">
+            <div class="role" id="role-0">
                 <p id="role">Waiting for opponent</p>
             </div>
             <div class="new-game">
                 <p id="new-game">New Game</p>
             </div>
         </div>
-        <div class="game-grid bg-grey-700">
-            <div class="super-cell bg-grey-300">
-                <div class="small-grid bg-grey-700" id="small-grid-0">
-                    <div class="game-cell bg-grey-300" id="game-cell-0"></div>
-                    <div class="game-cell bg-grey-300" id="game-cell-1"></div>
-                    <div class="game-cell bg-grey-300" id="game-cell-2"></div>
-                    <div class="game-cell bg-grey-300" id="game-cell-3"></div>
-                    <div class="game-cell bg-grey-300" id="game-cell-4"></div>
-                    <div class="game-cell bg-grey-300" id="game-cell-5"></div>
-                    <div class="game-cell bg-grey-300" id="game-cell-6"></div>
-                    <div class="game-cell bg-grey-300" id="game-cell-7"></div>
-                    <div class="game-cell bg-grey-300" id="game-cell-8"></div>
+        <div class="game-grid" id="game-grid-0">
+            <div class="super-cell" id="super-cell-0">
+                <div class="small-grid" id="small-grid-0">
+                    <div class="game-cell" id="game-cell-0"></div>
+                    <div class="game-cell" id="game-cell-1"></div>
+                    <div class="game-cell" id="game-cell-2"></div>
+                    <div class="game-cell" id="game-cell-3"></div>
+                    <div class="game-cell" id="game-cell-4"></div>
+                    <div class="game-cell" id="game-cell-5"></div>
+                    <div class="game-cell" id="game-cell-6"></div>
+                    <div class="game-cell" id="game-cell-7"></div>
+                    <div class="game-cell" id="game-cell-8"></div>
                 </div>
             </div>
-            <div class="super-cell bg-grey-300">
-                <div class="small-grid bg-grey-700" id="small-grid-1">
-                    <div class="game-cell bg-grey-300" id="game-cell-9"></div>
-                    <div class="game-cell bg-grey-300" id="game-cell-10"></div>
-                    <div class="game-cell bg-grey-300" id="game-cell-11"></div>
-                    <div class="game-cell bg-grey-300" id="game-cell-12"></div>
-                    <div class="game-cell bg-grey-300" id="game-cell-13"></div>
-                    <div class="game-cell bg-grey-300" id="game-cell-14"></div>
-                    <div class="game-cell bg-grey-300" id="game-cell-15"></div>
-                    <div class="game-cell bg-grey-300" id="game-cell-16"></div>
-                    <div class="game-cell bg-grey-300" id="game-cell-17"></div>
+            <div class="super-cell" id="super-cell-1">
+                <div class="small-grid" id="small-grid-1">
+                    <div class="game-cell" id="game-cell-9"></div>
+                    <div class="game-cell" id="game-cell-10"></div>
+                    <div class="game-cell" id="game-cell-11"></div>
+                    <div class="game-cell" id="game-cell-12"></div>
+                    <div class="game-cell" id="game-cell-13"></div>
+                    <div class="game-cell" id="game-cell-14"></div>
+                    <div class="game-cell" id="game-cell-15"></div>
+                    <div class="game-cell" id="game-cell-16"></div>
+                    <div class="game-cell" id="game-cell-17"></div>
                 </div>
             </div>
-            <div class="super-cell bg-grey-300">
-                <div class="small-grid bg-grey-700" id="small-grid-2">
-                    <div class="game-cell bg-grey-300" id="game-cell-18"></div>
-                    <div class="game-cell bg-grey-300" id="game-cell-19"></div>
-                    <div class="game-cell bg-grey-300" id="game-cell-20"></div>
-                    <div class="game-cell bg-grey-300" id="game-cell-21"></div>
-                    <div class="game-cell bg-grey-300" id="game-cell-22"></div>
-                    <div class="game-cell bg-grey-300" id="game-cell-23"></div>
-                    <div class="game-cell bg-grey-300" id="game-cell-24"></div>
-                    <div class="game-cell bg-grey-300" id="game-cell-25"></div>
-                    <div class="game-cell bg-grey-300" id="game-cell-26"></div>
+            <div class="super-cell" id="super-cell-2">
+                <div class="small-grid" id="small-grid-2">
+                    <div class="game-cell" id="game-cell-18"></div>
+                    <div class="game-cell" id="game-cell-19"></div>
+                    <div class="game-cell" id="game-cell-20"></div>
+                    <div class="game-cell" id="game-cell-21"></div>
+                    <div class="game-cell" id="game-cell-22"></div>
+                    <div class="game-cell" id="game-cell-23"></div>
+                    <div class="game-cell" id="game-cell-24"></div>
+                    <div class="game-cell" id="game-cell-25"></div>
+                    <div class="game-cell" id="game-cell-26"></div>
                 </div>
             </div>
-            <div class="super-cell bg-grey-300">
-                <div class="small-grid bg-grey-700" id="small-grid-3">
-                    <div class="game-cell bg-grey-300" id="game-cell-27"></div>
-                    <div class="game-cell bg-grey-300" id="game-cell-28"></div>
-                    <div class="game-cell bg-grey-300" id="game-cell-29"></div>
-                    <div class="game-cell bg-grey-300" id="game-cell-30"></div>
-                    <div class="game-cell bg-grey-300" id="game-cell-31"></div>
-                    <div class="game-cell bg-grey-300" id="game-cell-32"></div>
-                    <div class="game-cell bg-grey-300" id="game-cell-33"></div>
-                    <div class="game-cell bg-grey-300" id="game-cell-34"></div>
-                    <div class="game-cell bg-grey-300" id="game-cell-35"></div>
+            <div class="super-cell" id="super-cell-3">
+                <div class="small-grid" id="small-grid-3">
+                    <div class="game-cell" id="game-cell-27"></div>
+                    <div class="game-cell" id="game-cell-28"></div>
+                    <div class="game-cell" id="game-cell-29"></div>
+                    <div class="game-cell" id="game-cell-30"></div>
+                    <div class="game-cell" id="game-cell-31"></div>
+                    <div class="game-cell" id="game-cell-32"></div>
+                    <div class="game-cell" id="game-cell-33"></div>
+                    <div class="game-cell" id="game-cell-34"></div>
+                    <div class="game-cell" id="game-cell-35"></div>
                 </div>
             </div>
-            <div class="super-cell bg-grey-300">
-                <div class="small-grid bg-grey-700" id="small-grid-4">
-                    <div class="game-cell bg-grey-300" id="game-cell-36"></div>
-                    <div class="game-cell bg-grey-300" id="game-cell-37"></div>
-                    <div class="game-cell bg-grey-300" id="game-cell-38"></div>
-                    <div class="game-cell bg-grey-300" id="game-cell-39"></div>
-                    <div class="game-cell bg-grey-300" id="game-cell-40"></div>
-                    <div class="game-cell bg-grey-300" id="game-cell-41"></div>
-                    <div class="game-cell bg-grey-300" id="game-cell-42"></div>
-                    <div class="game-cell bg-grey-300" id="game-cell-43"></div>
-                    <div class="game-cell bg-grey-300" id="game-cell-44"></div>
+            <div class="super-cell" id="super-cell-4">
+                <div class="small-grid" id="small-grid-4">
+                    <div class="game-cell" id="game-cell-36"></div>
+                    <div class="game-cell" id="game-cell-37"></div>
+                    <div class="game-cell" id="game-cell-38"></div>
+                    <div class="game-cell" id="game-cell-39"></div>
+                    <div class="game-cell" id="game-cell-40"></div>
+                    <div class="game-cell" id="game-cell-41"></div>
+                    <div class="game-cell" id="game-cell-42"></div>
+                    <div class="game-cell" id="game-cell-43"></div>
+                    <div class="game-cell" id="game-cell-44"></div>
                 </div>
             </div>
-            <div class="super-cell bg-grey-300">
-                <div class="small-grid bg-grey-700" id="small-grid-5">
-                    <div class="game-cell bg-grey-300" id="game-cell-45"></div>
-                    <div class="game-cell bg-grey-300" id="game-cell-46"></div>
-                    <div class="game-cell bg-grey-300" id="game-cell-47"></div>
-                    <div class="game-cell bg-grey-300" id="game-cell-48"></div>
-                    <div class="game-cell bg-grey-300" id="game-cell-49"></div>
-                    <div class="game-cell bg-grey-300" id="game-cell-50"></div>
-                    <div class="game-cell bg-grey-300" id="game-cell-51"></div>
-                    <div class="game-cell bg-grey-300" id="game-cell-52"></div>
-                    <div class="game-cell bg-grey-300" id="game-cell-53"></div>
+            <div class="super-cell" id="super-cell-5">
+                <div class="small-grid" id="small-grid-5">
+                    <div class="game-cell" id="game-cell-45"></div>
+                    <div class="game-cell" id="game-cell-46"></div>
+                    <div class="game-cell" id="game-cell-47"></div>
+                    <div class="game-cell" id="game-cell-48"></div>
+                    <div class="game-cell" id="game-cell-49"></div>
+                    <div class="game-cell" id="game-cell-50"></div>
+                    <div class="game-cell" id="game-cell-51"></div>
+                    <div class="game-cell" id="game-cell-52"></div>
+                    <div class="game-cell" id="game-cell-53"></div>
                 </div>
             </div>
-            <div class="super-cell bg-grey-300">
-                <div class="small-grid bg-grey-700" id="small-grid-6">
-                    <div class="game-cell bg-grey-300" id="game-cell-54"></div>
-                    <div class="game-cell bg-grey-300" id="game-cell-55"></div>
-                    <div class="game-cell bg-grey-300" id="game-cell-56"></div>
-                    <div class="game-cell bg-grey-300" id="game-cell-57"></div>
-                    <div class="game-cell bg-grey-300" id="game-cell-58"></div>
-                    <div class="game-cell bg-grey-300" id="game-cell-59"></div>
-                    <div class="game-cell bg-grey-300" id="game-cell-60"></div>
-                    <div class="game-cell bg-grey-300" id="game-cell-61"></div>
-                    <div class="game-cell bg-grey-300" id="game-cell-62"></div>
+            <div class="super-cell" id="super-cell-6">
+                <div class="small-grid" id="small-grid-6">
+                    <div class="game-cell" id="game-cell-54"></div>
+                    <div class="game-cell" id="game-cell-55"></div>
+                    <div class="game-cell" id="game-cell-56"></div>
+                    <div class="game-cell" id="game-cell-57"></div>
+                    <div class="game-cell" id="game-cell-58"></div>
+                    <div class="game-cell" id="game-cell-59"></div>
+                    <div class="game-cell" id="game-cell-60"></div>
+                    <div class="game-cell" id="game-cell-61"></div>
+                    <div class="game-cell" id="game-cell-62"></div>
                 </div>
             </div>
-            <div class="super-cell bg-grey-300">
-                <div class="small-grid bg-grey-700" id="small-grid-7">
-                    <div class="game-cell bg-grey-300" id="game-cell-63"></div>
-                    <div class="game-cell bg-grey-300" id="game-cell-64"></div>
-                    <div class="game-cell bg-grey-300" id="game-cell-65"></div>
-                    <div class="game-cell bg-grey-300" id="game-cell-66"></div>
-                    <div class="game-cell bg-grey-300" id="game-cell-67"></div>
-                    <div class="game-cell bg-grey-300" id="game-cell-68"></div>
-                    <div class="game-cell bg-grey-300" id="game-cell-69"></div>
-                    <div class="game-cell bg-grey-300" id="game-cell-70"></div>
-                    <div class="game-cell bg-grey-300" id="game-cell-71"></div>
+            <div class="super-cell" id="super-cell-7">
+                <div class="small-grid" id="small-grid-7">
+                    <div class="game-cell" id="game-cell-63"></div>
+                    <div class="game-cell" id="game-cell-64"></div>
+                    <div class="game-cell" id="game-cell-65"></div>
+                    <div class="game-cell" id="game-cell-66"></div>
+                    <div class="game-cell" id="game-cell-67"></div>
+                    <div class="game-cell" id="game-cell-68"></div>
+                    <div class="game-cell" id="game-cell-69"></div>
+                    <div class="game-cell" id="game-cell-70"></div>
+                    <div class="game-cell" id="game-cell-71"></div>
                 </div>
             </div>
-            <div class="super-cell bg-grey-300">
-                <div class="small-grid bg-grey-700" id="small-grid-8">
-                    <div class="game-cell bg-grey-300" id="game-cell-72"></div>
-                    <div class="game-cell bg-grey-300" id="game-cell-73"></div>
-                    <div class="game-cell bg-grey-300" id="game-cell-74"></div>
-                    <div class="game-cell bg-grey-300" id="game-cell-75"></div>
-                    <div class="game-cell bg-grey-300" id="game-cell-76"></div>
-                    <div class="game-cell bg-grey-300" id="game-cell-77"></div>
-                    <div class="game-cell bg-grey-300" id="game-cell-78"></div>
-                    <div class="game-cell bg-grey-300" id="game-cell-79"></div>
-                    <div class="game-cell bg-grey-300" id="game-cell-80"></div>
+            <div class="super-cell" id="super-cell-8">
+                <div class="small-grid" id="small-grid-8">
+                    <div class="game-cell" id="game-cell-72"></div>
+                    <div class="game-cell" id="game-cell-73"></div>
+                    <div class="game-cell" id="game-cell-74"></div>
+                    <div class="game-cell" id="game-cell-75"></div>
+                    <div class="game-cell" id="game-cell-76"></div>
+                    <div class="game-cell" id="game-cell-77"></div>
+                    <div class="game-cell" id="game-cell-78"></div>
+                    <div class="game-cell" id="game-cell-79"></div>
+                    <div class="game-cell" id="game-cell-80"></div>
                 </div>
             </div>
         </div>
