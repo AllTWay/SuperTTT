@@ -36,13 +36,13 @@ assignColors();
 
 // Default colors
 function assignColors() {
-    changeColor(gameContainers, 'bg-grey-300', 'bg');
-    changeColor(titles, 'text-grey-700', 'text');
-    changeColor(roles, 'text-grey-700', 'text');
-    changeColor(gameGrids, 'bg-grey-700', 'bg');
-    changeColor(superCells, 'bg-grey-300', 'bg');
-    changeColor(smallGrids, 'bg-grey-700', 'bg');
-    changeColor(gameCells, 'bg-grey-300', 'bg');
+    changeColorAll(gameContainers, 'bg-grey-300', 'bg');
+    changeColorAll(titles, 'text-grey-700', 'text');
+    changeColorAll(roles, 'text-grey-700', 'text');
+    changeColorAll(gameGrids, 'bg-grey-700', 'bg');
+    changeColorAll(superCells, 'bg-grey-300', 'bg');
+    changeColorAll(smallGrids, 'bg-grey-700', 'bg');
+    changeColorAll(gameCells, 'bg-grey-300', 'bg');
 }
 
 // Dom handling
@@ -101,9 +101,9 @@ function set_valid(valid, player) {
     for (const small_grid of smallGrids) {
         let id = parseInt(small_grid.id.replace(/[^0-9]/g, ''));
         if (valid.includes(id) && (player === role || role === SPECTATOR)) {
-            small_grid.classList.add("bg-blue-500");
+            changeColor(small_grid, 'bg-blue-500', 'bg');
         } else {
-            small_grid.classList.remove("bg-blue-500");
+            changeColor(small_grid, 'bg-grey-700', 'bg');
         }
     }
 }
@@ -149,11 +149,16 @@ function handle_new_game_out(e) {
     newGameDiv.classList.remove('text-pink-500');
 }
 
-function changeColor(selection, color, remove) {
+function changeColorAll(selection, color, remove) {
     for (const obj of selection) {
         removeClassByPrefix(obj, remove);
         obj.classList.add(color);
     }
+}
+
+function changeColor(selection, color, remove) {
+    removeClassByPrefix(selection, remove);
+    selection.classList.add(color);
 }
 
 function removeClassByPrefix(node, prefix) {
