@@ -4,6 +4,8 @@ const PORT = 8080;
 const FAVICON = __dirname + "/../frontend/assets/img/hashtag.png";
 const FRONTEND = __dirname + "/../frontend";
 
+const cookie_name = 'tictactoer';
+
 
 // Server
 var os = require("os");
@@ -12,9 +14,12 @@ var express = require("express");
 var app = express();
 var http = require('http').createServer(app);
 var favicon = require("express-favicon");
+var cookieParser = require('cookie-parser');
 
 var socket = require("socket.io");
 var io = socket(http);
+
+const { v4: uuidv4 } = require('uuid');
 
 
 // Database
@@ -40,11 +45,17 @@ function print_queue() {
     console.log(res);
 }
 
+
+app.use(cookieParser());
+app.use(handle_cookie);
+
 // Prevent MIME TYPE error by making html directory static and therefore usable
 app.use(express.static(FRONTEND));
 
 // Set favicon
 app.use(favicon(FAVICON));
+
+
 
 // HTTP request handling
 app.get("/", handle_main);
@@ -60,10 +71,30 @@ io.on('connection', handle_connection);
 // log_dependencies();
 http.listen(PORT, log_running);
 
+// ===========================================
+//             Custom middleware
+// ===========================================
+
+function handle_cookie(req, res, next) {
+
+    if(!(cookie_name in req.cookies)) {
+        let c = uuidv4();
+        let opts = {
+            httpOnly: true, 
+        }
+        res.cookie(cookie_name, c, opts);
+
+        console.log(`New player: ${c}`);
+    }
+
+    next();
+}
+
 
 // ===========================================
 //             Event handlers
 // ===========================================
+
 
 function handle_main(req, res) {
     res.statusCode = 200;
@@ -73,6 +104,7 @@ function handle_main(req, res) {
 }
 
 async function handle_games(req, res) {
+    console.log(`Request with cookie: ${JSON.stringify(req.cookies)}`);
     res.statusCode = 200;
     res.setHeader("Content-Type", "application/json");
     let hist = await get_all_games();
@@ -155,13 +187,15 @@ function handle_connection(socket) {
     }
 
     function handle_play(msg) {
-        if(!(socket.id in players)) {
+        let player_id = socket.id;
+
+        if(!(player_id in players)) {
             // player is not playing!
             console.log("Non-player tried to play!");
             return;
         }
 
-        let player = players[socket.id].role;
+        let player = players[player_id].role;
         let position = msg.position;
         let game = players[socket.id].game;
         let room = players[socket.id].room;
