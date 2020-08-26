@@ -2,6 +2,7 @@
 
 // Server
 var os = require("os");
+var path = require("path");
 
 var express = require("express");
 var app = express();
@@ -60,10 +61,42 @@ app.get("/games", handle_games);
 app.get("*", handle_default);
 
 function handle_main(req, res) {
+    var options = {
+        root: FRONTEND,
+        dotfiles: 'deny',
+        headers: {
+            'x-timestamp': Date.now(),
+            'x-sent': true
+        }
+    }
+
     res.statusCode = 200;
     res.setHeader("Content-Type", "text/html");
-    res.sendFile("index.html", { root: __dirname });
-    res.end();
+    res.sendFile("menu.html", options);
+}
+
+function handle_party(req, res) {
+    console.log("Creating party!");
+
+    var options = {
+        root: FRONTEND,
+        dotfiles: 'deny',
+        headers: {
+            'x-timestamp': Date.now(),
+            'x-sent': true
+        }
+    }
+
+    res.statusCode = 200;
+    res.setHeader("Content-Type", "text/html");
+    res.sendFile("gameboard.html", options, (err) => {
+        if(err) {
+            console.log(err);
+            res.end();
+        } else {
+            console.log("Done");
+        }
+    });
 }
 
 async function handle_games(req, res) {
