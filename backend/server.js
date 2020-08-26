@@ -1,10 +1,5 @@
 "use strict";
 
-const PORT = 8080;
-const FAVICON = __dirname + "/../frontend/assets/img/hashtag.png";
-const FRONTEND = __dirname + "/../frontend";
-
-
 // Server
 var os = require("os");
 
@@ -16,7 +11,6 @@ var favicon = require("express-favicon");
 var socket = require("socket.io");
 var io = socket(http);
 
-
 // Database
 const firebase = require("firebase/app");
 require('firebase/database');
@@ -24,9 +18,13 @@ var firebaseConfig = require("./firebase_config.js");
 firebase.initializeApp(firebaseConfig);
 var database = firebase.database();
 
-
 // Game
 var super_ttt = require("./super_ttt.js");
+
+const PORT = 8080;
+const FAVICON = __dirname + "/../frontend/assets/img/hashtag.png";
+const FRONTEND = path.resolve(__dirname, "..", "frontend");
+
 
 var players = {};
 var queue = [];
@@ -36,34 +34,30 @@ function print_queue() {
     for(let p of queue) {
         res.push(p.id);
     }
-    console.log(`[*] Queue:`);
+    console.log("[*] Queue:");
     console.log(res);
 }
 
-// Prevent MIME TYPE error by making html directory static and therefore usable
+// Prevent MIME TYPE error by making html
+// directory static and therefore usable
 app.use(express.static(FRONTEND));
 
 // Set favicon
 app.use(favicon(FAVICON));
 
-// HTTP request handling
-app.get("/", handle_main);
-app.get("/games", handle_games);
-app.get("*", handle_default);
-
-// Socket event handling
-io.on('connection', handle_connection);
-
-
+// log_dependencies();
 
 // Run server
-// log_dependencies();
 http.listen(PORT, log_running);
 
 
 // ===========================================
-//             Event handlers
+//             HTTP handlers
 // ===========================================
+app.get("/", handle_main);
+app.get("/party", handle_party);
+app.get("/games", handle_games);
+app.get("*", handle_default);
 
 function handle_main(req, res) {
     res.statusCode = 200;
@@ -82,6 +76,11 @@ async function handle_games(req, res) {
 function handle_default(req, res) {
     res.redirect("/");
 }
+
+// ===========================================
+//             Socket.io handlers
+// ===========================================
+io.on('connection', handle_connection);
 
 function handle_connection(socket) {
     handle_connect();
