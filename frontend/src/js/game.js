@@ -145,6 +145,7 @@ function handle_redirect(msg) {
 function handle_user_left(msg) {
     // redirect to home page
     console.log("User left the game :(");
+    alert("Player disconnected. Returning to home page...");
     window.location.href = "/";
 }
 
