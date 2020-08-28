@@ -115,7 +115,12 @@ function handle_main(req, res) {
 
     res.statusCode = 200;
     res.setHeader("Content-Type", "text/html");
-    res.sendFile("menu.html", options);
+    res.sendFile("menu.html", options, (err) => {
+        if(err) {
+            console.log(err);
+            res.end();
+        }
+    });
 }
 
 function handle_party(req, res) {
