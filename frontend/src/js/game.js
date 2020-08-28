@@ -30,6 +30,8 @@ socket.on('new-play', handle_move);
 socket.on('invalid-play', handle_error);
 socket.on('state', handle_state);
 socket.on('gg', handle_gg);
+socket.on('redirect', handle_redirect);
+socket.on('user-left', handle_user_left);
 
 
 assignColors();
@@ -135,6 +137,19 @@ function handle_play(e) {
 function handle_gg(msg) {
     document.querySelector(`#role`).innerText = `${msg.winner} wins!`;
 }
+
+function handle_redirect(msg) {
+    window.location.href = msg.destination;
+}
+
+function handle_user_left(msg) {
+    // redirect to home page
+    console.log("User left the game :(");
+    window.location.href = "/";
+}
+
+
+
 
 function handle_new_game_click(e) {
     console.log("New Game!");
