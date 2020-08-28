@@ -12,6 +12,8 @@ var favicon = require("express-favicon");
 var socket = require("socket.io");
 var io = socket(http);
 
+const shortid = require('shortid');
+
 // Database
 const firebase = require("firebase/app");
 require('firebase/database');
@@ -28,7 +30,24 @@ const FRONTEND = path.resolve(__dirname, "..", "frontend");
 
 
 var players = {};
-var queue = [];
+var rooms = {};
+/*
+players =  {
+    sock_id: {
+        socket: <socket_obj>,
+        room: roomid // key of rooms
+    }
+}
+
+rooms = {
+    roomid: {
+        roles: ['X', 'O'], // or vice versa
+        players: [sock_id1, sock_id2], // keys of players
+        spectators: [..., sock_id_x, ...],
+        game: <game_obj>
+    }
+}
+*/
 
 function print_queue() {
     let res = [];
@@ -39,9 +58,32 @@ function print_queue() {
     console.log(res);
 }
 
+function create_room() {
+    // find unique ID (make 100% sure)
+    let id;
+    let ids = Object.keys(rooms);
+    do {
+        id = shortid.generate();
+        // console.log(`Trying ${id}`);
+    } while (ids.includes(id));
+
+    rooms[id] = {
+        'players': [],
+        'spectators': []
+    };
+    return id;
+}
+
+function get_roomid(url) {
+    return url.split(path.sep).slice(-1)[0];
+}
+
 // Prevent MIME TYPE error by making html
 // directory static and therefore usable
 app.use(express.static(FRONTEND));
+
+// use FRONTEND files when in route `/game`
+app.use('/game', express.static(FRONTEND));
 
 // Set favicon
 app.use(favicon(FAVICON));
@@ -57,6 +99,7 @@ http.listen(PORT, log_running);
 // ===========================================
 app.get("/", handle_main);
 app.get("/party", handle_party);
+app.get("/game/:roomid", handle_join);
 app.get("/games", handle_games);
 app.get("*", handle_default);
 
@@ -76,7 +119,21 @@ function handle_main(req, res) {
 }
 
 function handle_party(req, res) {
-    console.log("Creating party!");
+    let roomid = create_room();
+    console.log(`[+] Created room ${roomid}`);
+
+    res.redirect(`game/${roomid}`);
+}
+
+function handle_join(req, res) {
+    let roomid = req.params.roomid;
+
+    // invalid room -> redirect to home page
+    if(!Object.keys(rooms).includes(roomid)) {
+        console.log(`[-] User tried to join non-existing room #${roomid}`);
+        res.redirect("/");
+        return;
+    }
 
     var options = {
         root: FRONTEND,
@@ -119,90 +176,96 @@ function handle_connection(socket) {
     handle_connect();
 
     // Set socket event handlers
-    socket.on('disconnect', handle_disconnect);
     socket.on('play', handle_play);
     socket.on('new-game', handle_new_game);
+    socket.on('disconnect', handle_disconnect);
 
     // Socket event handlers
     function handle_connect() {
-        console.log(`[+] New connection: ${socket.id}`)
 
-        if(queue.length == 0) {
-            queue.push(socket);
-
-        } else {
-            let p1 = queue.shift();
-            let p2 = socket;
-
-            let game = new super_ttt();
-            let room = `room_${p1.id}`;
-            let roles = Math.random() >= 0.5 ? ['X', 'O'] : ['O', 'X'];
-
-            register_player(p1, room, game, roles[0], p2.id);
-            register_player(p2, room, game, roles[1], p1.id);
-
-            p1.join(room);
-            p2.join(room);
-
-            console.log(`[+] Match found: ${p1.id} vs ${p2.id}`);
-            // console.log(players);
+        // aux function used to send game status
+        function send_game(psock, game, role) {
+            // inform client of its role and current game state
+            psock.emit('setup', {
+                'role': role,
+                'board': game.get_board(),
+                'next_player': game.get_next_player(),
+                'valid_squares': game.get_valid_squares(),
+            });
         }
 
-        print_queue();
-    }
-
-    function register_player(psock, room, game, role, opponent) {
-        players[psock.id] = {
-            'room': room,
-            'game': game,
-            'role': role,
-            'opponent': opponent
-        };
-
-        // inform client of its role and current game state
-        psock.emit('setup', {
-            'role': role,
-            'board': game.get_board(),
-            'next_player': game.get_next_player(),
-            'valid_squares': game.get_valid_squares(),
-        });
-    }
-
-    function handle_disconnect() {
-        // TODO: ??? what happens when playing disconnects?
-
-        // if(socket.id in players) {
-            // delete players[socket.id]
-        // }
-
-        // remove from queue
-        for(let i = 0; i < queue.length; i++) {
-            if(queue[i].id === socket.id) {
-                queue.splice(i, 1);
-            }
-        }
-
-        console.log(`[-] ${socket.id} disconnected`);
-        print_queue();
-    }
-
-    function handle_play(msg) {
-        if(!(socket.id in players)) {
-            // player is not playing!
-            console.log("Non-player tried to play!");
+        // check if room exists
+        let roomid = get_roomid(socket.request.headers.referer);
+        if(!Object.keys(rooms).includes(roomid)) {
+            console.log("[-] Socket connected to invalid room. Redirecting...");
+            socket.emit('redirect', {destination: "/"});
             return;
         }
 
-        let player = players[socket.id].role;
+        console.log(`[+] New conn: ${socket.id} in room ${roomid}`)
+
+        // join virtual socket room
+        socket.join(roomid);
+
+        // register player
+        players[socket.id] = {
+            socket: socket,
+            room: roomid
+        };
+
+        let room = rooms[roomid];
+        if(room['players'].length < 2) { // new player
+
+            room['players'].push(socket.id);
+
+            if(room['players'].length == 2) { // all players joined
+                console.log("\tGot full lobby");
+                let game = new super_ttt();
+                room['roles'] = Math.random() >= 0.5 ? ['X', 'O'] : ['O', 'X'];
+                room['game'] = game;
+                
+                for(let i = 0; i < 2; i++) {
+                    let player_id = room['players'][i];
+                    let psock = players[player_id]['socket'];
+                    let role = room['roles'][i];
+
+                    console.log(`\tP${i+1} (${player_id}): ${role}`);
+
+                    send_game(psock, game, role);
+
+                }
+            }
+
+        } else { // new spectator
+            console.log("\tGot Spectator");
+            room['spectators'].push(socket.id);
+            let game = room['game']
+            send_game(socket, game, 'SPECTATOR');
+        }
+    }
+
+    function handle_play(msg) {
+        let roomid = get_roomid(socket.request.headers.referer);
+        let room = rooms[roomid]
+        let players = room['players'];
+
+        let idx = players.indexOf(socket.id);
+        if(idx === -1) {
+            // player is not playing!
+            console.log(`[-] Non-player (${socket.id}) tried to play in room ${roomid}`);
+            return;
+        }
+
+        let player = room['roles'][idx];
         let position = msg.position;
-        let game = players[socket.id].game;
-        let room = players[socket.id].room;
+        let game = room.game;
+        console.log(`[+] {${roomid}} ${player} played ${position}`);
 
         let errors = game.play(player, position);
         // console.log(game.get_history());
 
         if(errors.length === 0) {
-            io.to(room).emit('new-play', {
+            io.to(roomid).emit('new-play', {
                 'player': player,
                 'position': position,
                 'valid_squares': game.get_valid_squares(),
@@ -211,17 +274,22 @@ function handle_connection(socket) {
             if(game.get_valid_squares().length === 0) {
                 // game over
                 console.log(`GG: ${game.get_winner() ? game.get_winner() + " wins": "Tie"}`);
-                io.to(room).emit('gg', {
+                io.to(roomid).emit('gg', {
                     'winner': game.get_winner(),
                 });
             }
         } else {
-            console.log("Sending error");
+            console.log("\tSending errors:");
+            for(const e of errors) {
+                console.log(`\t\t${e}`);
+            }
+
             socket.emit('invalid-play', errors);
         }
     }
 
     function handle_new_game() {
+        return;
         if(!(socket.id in players)) {
             console.log("Spectator asking for a new game");
             return;
