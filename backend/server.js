@@ -155,8 +155,6 @@ function handle_join(req, res) {
         if(err) {
             console.log(err);
             res.end();
-        } else {
-            console.log("Done");
         }
     });
 }
@@ -169,8 +167,10 @@ async function handle_games(req, res) {
 }
 
 function handle_default(req, res) {
+    console.log(`[!] Got bad request (${req.path}). Redirecting...`);
     res.redirect("/");
 }
+
 
 // ===========================================
 //             Socket.io handlers
