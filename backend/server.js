@@ -310,6 +310,36 @@ function handle_connection(socket) {
             'valid_squares': game.get_valid_squares(),
         });
     }
+
+    function handle_disconnect() {
+        let roomid = get_roomid(socket.request.headers.referer);
+
+        // delete from players
+        if(socket.id in players) {
+            delete players[socket.id]
+        }
+
+        if(!Object.keys(rooms).includes(roomid)) {
+            // disconnecting from non existing room
+            return;
+        }
+
+        console.log(`[-] ${socket.id} disconnected from room ${roomid}`);
+
+        let room = rooms[roomid];
+        
+        if(room['players'].includes(socket.id)) { // player disconnected
+            console.log('player disconnected');
+
+            io.to(roomid).emit('user-left');
+            delete rooms[roomid];
+
+        } else { // spectator disconnected
+            // remove from spectators
+            let idx = room['spectators'].indexOf(socket.id);
+            room['spectators'].splice(idx, 1);
+        }
+    }
 }
 
 // ===========================================
