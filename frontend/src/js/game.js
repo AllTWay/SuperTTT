@@ -21,8 +21,9 @@ const superCells = document.querySelectorAll('[id^=super-cell]');
 const smallGrids = document.querySelectorAll('[id^=small-grid]');
 const gameCells = document.querySelectorAll('[id^=game-cell]');
 
-// const gameCells = document.querySelectorAll(".game-cell");
-// const smallGrids = document.querySelectorAll(".small-grid");
+const roles = document.querySelectorAll('[id^=role]'); // TODO: fix
+
+window.onload = setup
 
 // socket handling
 socket.on('setup', handle_setup);
@@ -33,26 +34,6 @@ socket.on('gg', handle_gg);
 socket.on('redirect', handle_redirect);
 socket.on('user-left', handle_user_left);
 
-
-assignColors();
-
-// Default colors
-function assignColors() {
-    changeColorAll(gameContainers, 'bg-grey-300', 'bg');
-    changeColorAll(titles, 'text-grey-700', 'text');
-    changeColorAll(roles, 'text-grey-700', 'text');
-    changeColorAll(gameGrids, 'bg-grey-700', 'bg');
-    changeColorAll(superCells, 'bg-grey-300', 'bg');
-    changeColorAll(smallGrids, 'bg-grey-700', 'bg');
-    changeColorAll(gameCells, 'bg-grey-300', 'bg');
-}
-
-// Dom handling
-for (const gameCell of gameCells) {
-    gameCell.addEventListener('click', handle_play);
-}
-
-// Handlers
 function handle_setup(msg) {
     if (msg.role === X) {
         role = X;
@@ -163,6 +144,53 @@ function handle_new_game_over(e) {
 
 function handle_new_game_out(e) {
     newGameDiv.classList.remove('text-pink-500');
+}
+
+
+// ====================================
+//           Helper functions
+// ====================================
+function setup() {
+    // build game board
+    for(let sc=0; sc < 9; sc++) {
+        const superCell = document.createElement("div");
+        superCell.className = "super-cell";
+        superCell.id = `super-cell-${sc}`;
+
+        const smallGrid = document.createElement("div");
+        smallGrid.className = "small-grid";
+        smallGrid.id = `small-grid-${sc}`;
+
+        for(let gc = 0; gc < 9; gc++) {
+            const gameCell = document.createElement("div");
+            gameCell.className = "game-cell";
+            gameCell.id = `game-cell-${sc*9 + gc}`;
+
+            // handle click
+            gameCell.addEventListener('click', handle_play);
+
+            smallGrid.appendChild(gameCell);
+        }
+        superCell.appendChild(smallGrid);
+        gameGrid.appendChild(superCell);
+    }
+
+    assignColors();
+}
+
+function assignColors() {
+    // these are dynamic divs
+    let superCells = document.querySelectorAll('[id^=super-cell]');
+    let smallGrids = document.querySelectorAll('[id^=small-grid]');
+    let gameCells = document.querySelectorAll('[id^=game-cell]');
+
+    changeColorAll(gameContainers, 'bg-grey-300', 'bg');
+    changeColorAll(titles, 'text-grey-700', 'text');
+    changeColorAll(roles, 'text-grey-700', 'text');
+    changeColorAll([gameGrid], 'bg-grey-700', 'bg');
+    changeColorAll(superCells, 'bg-grey-300', 'bg');
+    changeColorAll(smallGrids, 'bg-grey-700', 'bg');
+    changeColorAll(gameCells, 'bg-grey-300', 'bg');
 }
 
 function changeColorAll(selection, color, remove) {
