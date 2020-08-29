@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Super Tic-Tac-Toe</title>
+
+    <!-- Custom compiled Bootstrap -->
+    <link rel="stylesheet" href="src/css/bootstrap.css">
+
+    <!-- Custom css -->
+    <link rel="stylesheet" href="src/css/style.css">
+
+    <!-- ion Icons -->
+    <link rel="stylesheet" href="src/fonts/ionicons/css/ionicons.min.css">
+</head>
+
+<body class="bg-brown-100">
+
+    <div class="game-container" id="game-container-0">
+        <h1 class="title" id="title-0">Super Tic Tac Toe</h1>
+        <div class="control">
+            <div class="status">
+                <p id="nextPlayer">X turn</p>
+            </div>
+            <div class="role" id="role-0">
+                <p id="role">Waiting for opponent</p>
+            </div>
+            <div class="new-game">
+                <p id="new-game">New Game</p>
+            </div>
+        </div>
+        <div class="game-grid" id="game-grid-0">
+            <!-- will be filled by js -->
+        </div>
+    </div>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="src/js/game.js"></script>
+</body>
+
+</html>

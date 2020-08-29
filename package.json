@@ -22,6 +22,7 @@
         "firebase": "^7.15.5",
         "firebase-admin": "^8.12.1",
         "pm2": "^4.4.0",
+        "shortid": "^2.2.15",
         "socket.io": "^2.3.0"
     }
 }

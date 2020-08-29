@@ -1,12 +1,8 @@
 "use strict";
 
-const PORT = 8080;
-const FAVICON = __dirname + "/../frontend/assets/img/hashtag.png";
-const FRONTEND = __dirname + "/../frontend";
-
-
 // Server
 var os = require("os");
+var path = require("path");
 
 var express = require("express");
 var app = express();
@@ -16,6 +12,7 @@ var favicon = require("express-favicon");
 var socket = require("socket.io");
 var io = socket(http);
 
+const shortid = require('shortid');
 
 // Database
 const firebase = require("firebase/app");
@@ -24,52 +21,158 @@ var firebaseConfig = require("./firebase_config.js");
 firebase.initializeApp(firebaseConfig);
 var database = firebase.database();
 
-
 // Game
 var super_ttt = require("./super_ttt.js");
 
+const PORT = 8080;
+const FAVICON = __dirname + "/../frontend/assets/img/hashtag.png";
+const FRONTEND = path.resolve(__dirname, "..", "frontend");
+
+
 var players = {};
-var queue = [];
+var rooms = {};
+var waiting_room = false;
+/*
+players =  {
+    sock_id: {
+        socket: <socket_obj>,
+        room: roomid // key of rooms
+    }
+}
+
+rooms = {
+    roomid: {
+        roles: ['X', 'O'], // or vice versa
+        players: [sock_id1, sock_id2], // keys of players
+        spectators: [..., sock_id_x, ...],
+        game: <game_obj>
+    }
+}
+*/
 
 function print_queue() {
     let res = [];
     for(let p of queue) {
         res.push(p.id);
     }
-    console.log(`[*] Queue:`);
+    console.log("[*] Queue:");
     console.log(res);
 }
 
-// Prevent MIME TYPE error by making html directory static and therefore usable
+function create_room() {
+    // find unique ID (make 100% sure)
+    let id;
+    let ids = Object.keys(rooms);
+    do {
+        id = shortid.generate();
+        // console.log(`Trying ${id}`);
+    } while (ids.includes(id));
+
+    rooms[id] = {
+        'players': [],
+        'spectators': []
+    };
+    return id;
+}
+
+function get_roomid(url) {
+    return url.split(path.sep).slice(-1)[0];
+}
+
+// Prevent MIME TYPE error by making html
+// directory static and therefore usable
 app.use(express.static(FRONTEND));
+
+// use FRONTEND files when in route `/game`
+app.use('/game', express.static(FRONTEND));
 
 // Set favicon
 app.use(favicon(FAVICON));
 
-// HTTP request handling
-app.get("/", handle_main);
-app.get("/games", handle_games);
-app.get("*", handle_default);
-
-// Socket event handling
-io.on('connection', handle_connection);
-
-
+// log_dependencies();
 
 // Run server
-// log_dependencies();
 http.listen(PORT, log_running);
 
 
 // ===========================================
-//             Event handlers
+//             HTTP handlers
 // ===========================================
+app.get("/", handle_main);
+app.get("/play", handle_play);
+app.get("/party", handle_party);
+app.get("/game/:roomid", handle_join);
+app.get("/games", handle_games);
+app.get("*", handle_default);
 
 function handle_main(req, res) {
+    var options = {
+        root: FRONTEND,
+        dotfiles: 'deny',
+        headers: {
+            'x-timestamp': Date.now(),
+            'x-sent': true
+        }
+    }
+
     res.statusCode = 200;
     res.setHeader("Content-Type", "text/html");
-    res.sendFile("index.html", { root: __dirname });
-    res.end();
+    res.sendFile("menu.html", options, (err) => {
+        if(err) {
+            console.log(err);
+            res.end();
+        }
+    });
+}
+
+function handle_play(req, res) {
+    if(!waiting_room) { // no room available
+        waiting_room = create_room();
+        res.redirect(`game/${waiting_room}`);
+        console.log(`[+] Created MM room ${waiting_room}`);
+    } else {
+        res.redirect(`game/${waiting_room}`);
+        console.log(`[+] Joined MM room ${waiting_room}`);
+        waiting_room = false;
+    }
+}
+
+
+function handle_party(req, res) {
+    let roomid = create_room();
+    console.log(`[+] Created Party room ${roomid}`);
+
+    res.redirect(`game/${roomid}`);
+}
+
+function handle_join(req, res) {
+    let roomid = req.params.roomid;
+
+    // invalid room -> redirect to home page
+    if(!Object.keys(rooms).includes(roomid)) {
+        console.log(`[-] User tried to join non-existing room #${roomid}`);
+        res.redirect("/");
+        return;
+    }
+
+        
+    var options = {
+        root: FRONTEND,
+        dotfiles: 'deny',
+        headers: {
+            'x-timestamp': Date.now(),
+            'x-sent': true
+        }
+    }
+
+    res.statusCode = 200;
+    res.setHeader("Content-Type", "text/html");
+    res.sendFile("gameboard.html", options, (err) => {
+        if(err) {
+            console.log(err);
+            res.end();
+        }
+    });
 }
 
 async function handle_games(req, res) {
@@ -80,97 +183,118 @@ async function handle_games(req, res) {
 }
 
 function handle_default(req, res) {
+    console.log(`[!] Got bad request (${req.path}). Redirecting...`);
     res.redirect("/");
 }
+
+
+// ===========================================
+//             Socket.io handlers
+// ===========================================
+io.on('connection', handle_connection);
 
 function handle_connection(socket) {
     handle_connect();
 
     // Set socket event handlers
-    socket.on('disconnect', handle_disconnect);
     socket.on('play', handle_play);
     socket.on('new-game', handle_new_game);
+    socket.on('disconnect', handle_disconnect);
 
     // Socket event handlers
     function handle_connect() {
-        console.log(`[+] New connection: ${socket.id}`)
 
-        if(queue.length == 0) {
-            queue.push(socket);
-
-        } else {
-            let p1 = queue.shift();
-            let p2 = socket;
-
-            let game = new super_ttt();
-            let room = `room_${p1.id}`;
-            let roles = Math.random() >= 0.5 ? ['X', 'O'] : ['O', 'X'];
-
-            register_player(p1, room, game, roles[0], p2.id);
-            register_player(p2, room, game, roles[1], p1.id);
-
-            p1.join(room);
-            p2.join(room);
-
-            console.log(`[+] Match found: ${p1.id} vs ${p2.id}`);
-            // console.log(players);
+        // aux function used to send game status
+        function send_game(psock, game, role) {
+            // inform client of its role and current game state
+            psock.emit('setup', {
+                'role': role,
+                'board': game.get_board(),
+                'next_player': game.get_next_player(),
+                'valid_squares': game.get_valid_squares(),
+            });
         }
 
-        print_queue();
-    }
-
-    function register_player(psock, room, game, role, opponent) {
-        players[psock.id] = {
-            'room': room,
-            'game': game,
-            'role': role,
-            'opponent': opponent
-        };
-
-        // inform client of its role and current game state
-        psock.emit('setup', {
-            'role': role,
-            'board': game.get_board(),
-            'next_player': game.get_next_player(),
-            'valid_squares': game.get_valid_squares(),
-        });
-    }
-
-    function handle_disconnect() {
-        // TODO: ??? what happens when playing disconnects?
-
-        // if(socket.id in players) {
-            // delete players[socket.id]
-        // }
-
-        // remove from queue
-        for(let i = 0; i < queue.length; i++) {
-            if(queue[i].id === socket.id) {
-                queue.splice(i, 1);
-            }
-        }
-
-        console.log(`[-] ${socket.id} disconnected`);
-        print_queue();
-    }
-
-    function handle_play(msg) {
-        if(!(socket.id in players)) {
-            // player is not playing!
-            console.log("Non-player tried to play!");
+        // check if room exists
+        let roomid = get_roomid(socket.request.headers.referer);
+        if(!Object.keys(rooms).includes(roomid)) {
+            console.log("[-] Socket connected to invalid room. Redirecting...");
+            socket.emit('redirect', {destination: "/"});
             return;
         }
 
-        let player = players[socket.id].role;
+        console.log(`[+] New conn: ${socket.id} in room ${roomid}`)
+
+        // join virtual socket room
+        socket.join(roomid);
+
+        // register player
+        players[socket.id] = {
+            socket: socket,
+            room: roomid
+        };
+
+        let room = rooms[roomid];
+        if(room['players'].length < 2) { // new player
+
+            room['players'].push(socket.id);
+
+            if(room['players'].length == 2) { // all players joined
+                console.log("\tGot full lobby");
+                let game = new super_ttt();
+                room['roles'] = Math.random() >= 0.5 ? ['X', 'O'] : ['O', 'X'];
+                room['game'] = game;
+                
+                for(let i = 0; i < 2; i++) {
+                    let player_id = room['players'][i];
+                    let psock = players[player_id]['socket'];
+                    let role = room['roles'][i];
+
+                    console.log(`\tP${i+1} (${player_id}): ${role}`);
+
+                    send_game(psock, game, role);
+                }
+
+                // Use case:
+                // User1: Play -> waiting_room created
+                // User2: joins waiting_room via link
+                // User3: Play -> joins waiting_room (Spectator!!)
+                // FIX: when full lobby, clear it
+                if(waiting_room === roomid) {
+                    waiting_room = false;
+                }
+            }
+
+        } else { // new spectator
+            console.log("\tGot Spectator");
+            room['spectators'].push(socket.id);
+            let game = room['game']
+            send_game(socket, game, 'SPECTATOR');
+        }
+    }
+
+    function handle_play(msg) {
+        let roomid = get_roomid(socket.request.headers.referer);
+        let room = rooms[roomid]
+        let players = room['players'];
+
+        let idx = players.indexOf(socket.id);
+        if(idx === -1) {
+            // player is not playing!
+            console.log(`[-] Non-player (${socket.id}) tried to play in room ${roomid}`);
+            return;
+        }
+
+        let player = room['roles'][idx];
         let position = msg.position;
-        let game = players[socket.id].game;
-        let room = players[socket.id].room;
+        let game = room.game;
+        console.log(`[+] {${roomid}} ${player} played ${position}`);
 
         let errors = game.play(player, position);
         // console.log(game.get_history());
 
         if(errors.length === 0) {
-            io.to(room).emit('new-play', {
+            io.to(roomid).emit('new-play', {
                 'player': player,
                 'position': position,
                 'valid_squares': game.get_valid_squares(),
@@ -179,17 +303,22 @@ function handle_connection(socket) {
             if(game.get_valid_squares().length === 0) {
                 // game over
                 console.log(`GG: ${game.get_winner() ? game.get_winner() + " wins": "Tie"}`);
-                io.to(room).emit('gg', {
+                io.to(roomid).emit('gg', {
                     'winner': game.get_winner(),
                 });
             }
         } else {
-            console.log("Sending error");
+            console.log("\tSending errors:");
+            for(const e of errors) {
+                console.log(`\t\t${e}`);
+            }
+
             socket.emit('invalid-play', errors);
         }
     }
 
     function handle_new_game() {
+        return;
         if(!(socket.id in players)) {
             console.log("Spectator asking for a new game");
             return;
@@ -209,6 +338,36 @@ function handle_connection(socket) {
             'next_player': game.get_next_player(),
             'valid_squares': game.get_valid_squares(),
         });
+    }
+
+    function handle_disconnect() {
+        let roomid = get_roomid(socket.request.headers.referer);
+
+        // delete from players
+        if(socket.id in players) {
+            delete players[socket.id]
+        }
+
+        if(!Object.keys(rooms).includes(roomid)) {
+            // disconnecting from non existing room
+            return;
+        }
+
+        console.log(`[-] ${socket.id} disconnected from room ${roomid}`);
+
+        let room = rooms[roomid];
+        
+        if(room['players'].includes(socket.id)) { // player disconnected
+            console.log('player disconnected');
+
+            io.to(roomid).emit('user-left');
+            delete rooms[roomid];
+
+        } else { // spectator disconnected
+            // remove from spectators
+            let idx = room['spectators'].indexOf(socket.id);
+            room['spectators'].splice(idx, 1);
+        }
     }
 }
 

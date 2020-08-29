@@ -70,7 +70,7 @@ class SuperTTT {
             return errors;
         }
         if(!this.valid_plays.includes(position)) {
-            console.log("Invalid play!");
+            // console.log("Invalid play!");
             errors.push("You cannot play in that position!");
             return errors;
         }
@@ -91,8 +91,8 @@ class SuperTTT {
         // console.log("New board:");
         // console.log(this.board.toArray());
         // console.log("Winner? " + this.board.get_winner());
-        console.log("Valid moves:");
-        console.log(this.valid_plays);
+        // console.log("Valid moves:");
+        // console.log(this.valid_plays);
         // console.log("Valid squares:");
         // console.log(this.get_valid_squares());
 
