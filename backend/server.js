@@ -31,6 +31,7 @@ const FRONTEND = path.resolve(__dirname, "..", "frontend");
 
 var players = {};
 var rooms = {};
+var waiting_room = false;
 /*
 players =  {
     sock_id: {
@@ -98,6 +99,7 @@ http.listen(PORT, log_running);
 //             HTTP handlers
 // ===========================================
 app.get("/", handle_main);
+app.get("/play", handle_play);
 app.get("/party", handle_party);
 app.get("/game/:roomid", handle_join);
 app.get("/games", handle_games);
@@ -123,9 +125,22 @@ function handle_main(req, res) {
     });
 }
 
+function handle_play(req, res) {
+    if(!waiting_room) { // no room available
+        waiting_room = create_room();
+        res.redirect(`game/${waiting_room}`);
+        console.log(`[+] Created MM room ${waiting_room}`);
+    } else {
+        res.redirect(`game/${waiting_room}`);
+        console.log(`[+] Joined MM room ${waiting_room}`);
+        waiting_room = false;
+    }
+}
+
+
 function handle_party(req, res) {
     let roomid = create_room();
-    console.log(`[+] Created room ${roomid}`);
+    console.log(`[+] Created Party room ${roomid}`);
 
     res.redirect(`game/${roomid}`);
 }
@@ -140,6 +155,7 @@ function handle_join(req, res) {
         return;
     }
 
+        
     var options = {
         root: FRONTEND,
         dotfiles: 'deny',
@@ -237,7 +253,15 @@ function handle_connection(socket) {
                     console.log(`\tP${i+1} (${player_id}): ${role}`);
 
                     send_game(psock, game, role);
+                }
 
+                // Use case:
+                // User1: Play -> waiting_room created
+                // User2: joins waiting_room via link
+                // User3: Play -> joins waiting_room (Spectator!!)
+                // FIX: when full lobby, clear it
+                if(waiting_room === roomid) {
+                    waiting_room = false;
                 }
             }
 
