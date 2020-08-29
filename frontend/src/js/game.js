@@ -5,27 +5,23 @@ const X = 'X';
 const O = 'O';
 
 var role;
+var gameBoard;
 
-// HTML elements
+// fixed HTML elements
 const roleDiv = document.querySelector("#role");
 const newGameDiv = document.querySelector("#new-game");
 const nextPlayerDiv = document.querySelector("#nextPlayer");
-
-// TODO: refactor gameCells (make array and build it with id corresponding to index)
-
+const gameGrid = document.querySelector("#game-grid-0");
 const gameContainers = document.querySelectorAll('[id^=game-container]');
 const titles = document.querySelectorAll('[id^=title]');
-const roles = document.querySelectorAll('[id^=role]');
-const gameGrids = document.querySelectorAll('[id^=game-grid]');
-const superCells = document.querySelectorAll('[id^=super-cell]');
-const smallGrids = document.querySelectorAll('[id^=small-grid]');
-const gameCells = document.querySelectorAll('[id^=game-cell]');
 
 const roles = document.querySelectorAll('[id^=role]'); // TODO: fix
 
 window.onload = setup
 
-// socket handling
+// ====================================
+//          socket handling
+// ====================================
 socket.on('setup', handle_setup);
 socket.on('new-play', handle_move);
 socket.on('invalid-play', handle_error);
@@ -58,39 +54,6 @@ function handle_setup(msg) {
     set_board(msg.board);
 }
 
-function handle_state(msg) {
-    console.log("Got new game");
-    set_turn(msg.next_player);
-    set_valid(msg.valid_squares, msg.next_player);
-    set_board(msg.board);
-}
-
-function set_turn(player) {
-    if (role === SPECTATOR || player !== role) {
-        nextPlayerDiv.innerText = `${player} turn`;
-    } else {
-        nextPlayerDiv.innerText = "Your turn";
-    }
-}
-
-function set_board(board) {
-    for (let i = 0; i < 81; i++) {
-        document.querySelector(`#game-cell-${i}`).innerText = board[i];
-    }
-}
-
-function set_valid(valid, player) {
-    // TODO: have sorted array (by id) and access directly
-    for (const small_grid of smallGrids) {
-        let id = parseInt(small_grid.id.replace(/[^0-9]/g, ''));
-        if (valid.includes(id) && (player === role || role === SPECTATOR)) {
-            changeColor(small_grid, 'bg-blue-500', 'bg');
-        } else {
-            changeColor(small_grid, 'bg-grey-700', 'bg');
-        }
-    }
-}
-
 function handle_move(msg) {
     id = "#game-cell-" + msg.position
 
@@ -101,6 +64,16 @@ function handle_move(msg) {
 
     set_turn(next_player);
     set_valid(msg.valid_squares, next_player);
+
+    gameBoard[msg.position] = msg.player;
+
+    // check if finished small board
+    // useless to check every small board
+    let base = msg.position - msg.position%9; // first cell of small board
+    let winner = check_winner(gameBoard.slice(base, base+9))
+    if(winner) {
+        close_board(base/9, winner);
+    }
 }
 
 function handle_error(msg) {
@@ -108,11 +81,11 @@ function handle_error(msg) {
     alert(msg.toString());
 }
 
-
-function handle_play(e) {
-    if (role !== SPECTATOR) {
-        socket.emit('play', { 'position': parseInt(e.target.id.replace(/[^0-9]/g, '')) });
-    }
+function handle_state(msg) {
+    console.log("Got new game");
+    set_turn(msg.next_player);
+    set_valid(msg.valid_squares, msg.next_player);
+    set_board(msg.board);
 }
 
 function handle_gg(msg) {
@@ -131,7 +104,15 @@ function handle_user_left(msg) {
 }
 
 
+// ====================================
+//             DOM handling
+// ====================================
 
+function handle_play(e) {
+    if (role !== SPECTATOR) {
+        socket.emit('play', { 'position': parseInt(e.target.id.replace(/[^0-9]/g, '')) });
+    }
+}
 
 function handle_new_game_click(e) {
     console.log("New Game!");
@@ -209,4 +190,107 @@ function removeClassByPrefix(node, prefix) {
     var regx = new RegExp('\\b' + prefix + '[^ ]*[ ]?\\b', 'g');
     node.className = node.className.replace(regx, '');
     return node;
+}
+
+function set_turn(player) {
+    if (role === SPECTATOR || player !== role) {
+        nextPlayerDiv.innerText = `${player} turn`;
+    } else {
+        nextPlayerDiv.innerText = "Your turn";
+    }
+}
+
+function set_board(board) {
+    for (let i = 0; i < 81; i++) {
+        document.querySelector(`#game-cell-${i}`).innerText = board[i];
+    }
+
+    gameBoard = board;
+
+    for(let i = 0; i < 9; i++) {
+        let winner = check_winner(gameBoard.slice(i*9, (i+1)*9))
+        if(winner) {
+            close_board(i, winner);
+        }
+    }
+}
+
+function close_board(idx, winner) {
+    function show_board(e) {
+        const finished_div = e.target.querySelectorAll("[id^='finished']")[0];
+        finished_div.hidden = true;
+        const grid_div = e.target.querySelectorAll("[id^='small-grid']")[0];
+        grid_div.hidden = false;
+    }
+    function hide_board(e) {
+        const finished_div = e.target.querySelectorAll("[id^='finished']")[0];
+        finished_div.hidden = false;
+        const grid_div = e.target.querySelectorAll("[id^='small-grid']")[0];
+        grid_div.hidden = true;
+    }
+
+    const superCell = document.querySelector(`#super-cell-${idx}`);
+    const smallGrid = document.querySelector(`#small-grid-${idx}`);
+
+    const div = document.createElement("div");
+    div.style.height = "100%";
+    div.id = `finished-${idx}`;
+
+    const h1 = document.createElement("h1");
+    h1.className = "text-blue-500 text-center mb-0";
+    h1.style.fontSize = "130px";
+    h1.innerText = winner;
+
+    div.appendChild(h1);
+
+    superCell.appendChild(div);
+
+    smallGrid.hidden = true;
+
+    superCell.addEventListener('mouseenter', show_board);
+    superCell.addEventListener('mouseleave', hide_board);
+}
+
+function set_valid(valid, player) {
+    // TODO: have sorted array (by id) and access directly
+
+    let smallGrids = document.querySelectorAll('[id^=small-grid]');
+    for (const small_grid of smallGrids) {
+        let id = parseInt(small_grid.id.replace(/[^0-9]/g, ''));
+        if (valid.includes(id) && (player === role || role === SPECTATOR)) {
+            changeColor(small_grid, 'bg-blue-500', 'bg');
+        } else {
+            changeColor(small_grid, 'bg-grey-700', 'bg');
+        }
+    }
+}
+
+function check_winner(smallBoard) {
+    // check vertical
+    for(let i = 0; i < 3; i++) {
+        if(smallBoard[i] !== " " 
+        && smallBoard[i] === smallBoard[i+3] 
+        && smallBoard[i] === smallBoard[i+6]) {
+            return smallBoard[i];
+        }
+    }
+
+    // check horizontal
+    for(let i = 0; i < 9; i+=3) {
+        if( smallBoard[i] !== " "
+        && smallBoard[i] === smallBoard[i+1]
+        && smallBoard[i] === smallBoard[i+2]) {
+            return smallBoard[i];
+        }
+    }
+
+    // check diagonals
+    if(smallBoard[4] !== " "
+    && (smallBoard[0] === smallBoard[4] && smallBoard[4] === smallBoard[8]
+     || smallBoard[2] === smallBoard[4] && smallBoard[4] === smallBoard[6])
+    ) {
+        return smallBoard[4];
+    }
+
+    return false;
 }
