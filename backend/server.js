@@ -14,6 +14,11 @@ var io = socket(http);
 
 const shortid = require('shortid');
 
+const X = 'X';
+const O = 'O';
+const SPEC = 'SPECTATOR';
+
+
 // Database
 // const firebase = require("firebase/app");
 // require('firebase/database');
@@ -237,9 +242,27 @@ function handle_connection(socket) {
         };
 
         let room = rooms[roomid];
-        if(room['players'].length < 2) { // new player
-
-            room['players'].push(socket.id);
+        let nplayers = 0;
+        let game;
+        
+        for(const role of [X, O] ) {
+            if(role in room) {
+                nplayers++;
+            }
+        }
+        switch(nplayers) {
+            case 0:
+                // Assign random role to first player
+                room[Math.random() >= 0.5 ? X : O] = socket.id;
+                break;
+            case 1:
+                // Check which role is empty and assign it to second player
+                if(X in room) {
+                    room[O] = socket.id;
+                } else {
+                    room[X] = socket.id;
+                }
+                room['spectators'] = [];
 
             if(room['players'].length == 2) { // all players joined
                 console.log("\tGot full lobby");
@@ -254,6 +277,9 @@ function handle_connection(socket) {
 
                     console.log(`\tP${i+1} (${player_id}): ${role}`);
 
+                for(const role of [X, O]) {
+                    log(`\t${role}: ${room[role]}`);
+                    const psock = players[room[role]]['socket'];
                     send_game(psock, game, role);
                 }
 
@@ -280,10 +306,13 @@ function handle_connection(socket) {
         let room = rooms[roomid]
         let players = room['players'];
 
-        let idx = players.indexOf(socket.id);
-        if(idx === -1) {
-            // player is not playing!
-            console.log(`[-] Non-player (${socket.id}) tried to play in room ${roomid}`);
+        let player = false;
+        if(room[X] == socket.id)        player = X;
+        else if(room[O] == socket.id)   player = O;
+
+        if(!player) {
+            // Player is not playing!
+            log(`Non-player (${socket.id}) tried to play in room ${roomid}`, WARNING);
             return;
         }
 
