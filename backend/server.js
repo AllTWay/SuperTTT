@@ -38,6 +38,19 @@ var players = {};
 var rooms = {};
 var waiting_room = false;
 
+
+// Set up rate limiter: maximum of five requests per minute
+var RateLimit = require('express-rate-limit');
+var limiter = new RateLimit({
+    windowMs: 1000, // 1 second
+    max: 10,
+    message: "Whoops, we detected super high traffic from your computer... Try again later please :)"
+});
+
+// Apply rate limiter to all requests | This tries to avoid DOS Attacks
+app.use(limiter);
+
+
 function create_room() {
     // Find unique ID (make 100% sure)
     let id;
@@ -66,8 +79,6 @@ app.use('/game', express.static(FRONTEND));
 
 // Set favicon
 app.use(favicon(FAVICON));
-
-// log_dependencies();
 
 // Run server
 http.listen(PORT, log_running);
@@ -280,7 +291,6 @@ function handle_connection(socket) {
         
         let position = msg.position;
         let game = room['game'];
-        console.log(game.board);
         log(`{${roomid}} ${player} played ${position}`, SUCCESS);
 
         let errors = game.play(player, position);
@@ -325,7 +335,6 @@ function handle_connection(socket) {
         // persist_game(players[socket.id].game);
         log("Creating new game", SUCCESS);
         let game = new super_ttt();
-        console.log(game.board);
         room['game'] = game;
 
         io.emit('state', {
@@ -402,7 +411,6 @@ async function get_all_games() {
 //      Fancy console logging by Migmac
 // ===========================================
 
-
 const colorModule = require("./console_colors.js");
 const color = colorModule.name;
 
@@ -421,12 +429,16 @@ function log_running() {
     log(`   +--=[${WHITE}Private IP${RESET}]=--> ${GREEN}${get_ipv4()}:${YELLOW}${PORT}${RESET}`);
     log("   |");
     log("   ."); // End Spacer
+
+    log_dependencies();
 }
+
 
 function log_dependencies() {
     log(`${RED}Dependencies${RESET}`);
     log(`${RED}  --> ${YELLOW}Express${RESET}`);
     log(`${RED}  --> ${YELLOW}Express-Favicon${RESET}`);
+    log(`${RED}  --> ${YELLOW}Express-Rate-Limit${RESET}`);
     log(".");
 }
 
