@@ -31,8 +31,6 @@ socket.on('redirect', handle_redirect);
 socket.on('user-left', handle_user_left);
 
 function handle_setup(msg) {
-    setup();
-
     if (msg.role === X) {
         role = X;
     } else if (msg.role === O) {
@@ -51,6 +49,7 @@ function handle_setup(msg) {
         roleDiv.innerText = "Playing as " + role;
     }
 
+    setup();
     set_turn(msg.next_player);
     set_valid(msg.valid_squares, msg.next_player);
     set_board(msg.board);
@@ -151,11 +150,14 @@ function setup() {
 
         for(let gc = 0; gc < 9; gc++) {
             const gameCell = document.createElement("div");
-            gameCell.className = "game-cell";
+            gameCell.classList.add("game-cell");
             gameCell.id = `game-cell-${sc*9 + gc}`;
 
             // handle click
-            gameCell.addEventListener('click', handle_play);
+            if(role !== SPECTATOR) {
+                gameCell.addEventListener('click', handle_play);
+                gameCell.classList.add("clickable");
+            }
 
             smallGrid.appendChild(gameCell);
         }
@@ -266,8 +268,18 @@ function set_valid(valid, player) {
         let id = parseInt(small_grid.id.replace(/[^0-9]/g, ''));
         if (valid.includes(id) && (player === role || role === SPECTATOR)) {
             changeColor(small_grid, 'bg-blue-500', 'bg');
+
+            if(role === SPECTATOR) continue;
+            
+            // Update clickable
+            small_grid.childNodes.forEach(cell => {
+                if(cell.innerText === "") cell.classList.add("clickable");
+            });
         } else {
             changeColor(small_grid, 'bg-grey-700', 'bg');
+            small_grid.childNodes.forEach(cell => {
+                cell.classList.remove("clickable");
+            });
         }
     }
 }
