@@ -37,45 +37,18 @@ const FRONTEND = path.resolve(__dirname, "..", "frontend");
 var players = {};
 var rooms = {};
 var waiting_room = false;
-/*
-players =  {
-    sock_id: {
-        socket: <socket_obj>,
-        room: roomid // key of rooms
-    }
-}
-
-rooms = {
-    roomid: {
-        roles: ['X', 'O'], // or vice versa
-        players: [sock_id1, sock_id2], // keys of players
-        spectators: [..., sock_id_x, ...],
-        game: <game_obj>
-    }
-}
-*/
-
-function print_queue() {
-    let res = [];
-    for(let p of queue) {
-        res.push(p.id);
-    }
-    console.log("[*] Queue:");
-    console.log(res);
-}
 
 function create_room() {
-    // find unique ID (make 100% sure)
+    // Find unique ID (make 100% sure)
     let id;
     let ids = Object.keys(rooms);
     do {
         id = shortid.generate();
-        console.log(`Trying ${id}`);
+        // log(`Trying ${id}`);
     } while (ids.includes(id));
 
     rooms[id] = {
-        'players': [],
-        'spectators': []
+        'id': id
     };
     return id;
 }
@@ -85,10 +58,10 @@ function get_roomid(url) {
 }
 
 // Prevent MIME TYPE error by making html
-// directory static and therefore usable
+// Directory static and therefore usable
 app.use(express.static(FRONTEND));
 
-// use FRONTEND files when in route `/game`
+// Use FRONTEND files when in route `/game`
 app.use('/game', express.static(FRONTEND));
 
 // Set favicon
@@ -124,21 +97,20 @@ function handle_main(req, res) {
     res.setHeader("Content-Type", "text/html");
     res.sendFile("menu.html", options, (err) => {
         if(err) {
-            console.log(err);
+            log(err, ERROR)
             res.end();
         }
     });
 }
 
 function handle_play(req, res) {
-    if(!waiting_room) { // no room available
-        console.log("creating new room");
+    if(!waiting_room) { // No room available
         waiting_room = create_room();
         res.redirect(`game/${waiting_room}`);
-        console.log(`[+] Created MM room ${waiting_room}`);
+        log(`Created MM room ${waiting_room}`, SUCCESS);
     } else {
         res.redirect(`game/${waiting_room}`);
-        console.log(`[+] Joined MM room ${waiting_room}`);
+        log(`Joined MM room ${waiting_room}`, SUCCESS);
         waiting_room = false;
     }
 }
@@ -146,7 +118,7 @@ function handle_play(req, res) {
 
 function handle_party(req, res) {
     let roomid = create_room();
-    console.log(`[+] Created Party room ${roomid}`);
+    log(`Created Party room ${roomid}`, SUCCESS);
 
     res.redirect(`game/${roomid}`);
 }
@@ -154,9 +126,9 @@ function handle_party(req, res) {
 function handle_join(req, res) {
     let roomid = req.params.roomid;
 
-    // invalid room -> redirect to home page
+    // Invalid room -> redirect to home page
     if(!Object.keys(rooms).includes(roomid)) {
-        console.log(`[-] User tried to join non-existing room #${roomid}`);
+        log(`User tried to join non-existing room #${roomid}`, WARNING);
         res.redirect("/");
         return;
     }
@@ -175,7 +147,7 @@ function handle_join(req, res) {
     res.setHeader("Content-Type", "text/html");
     res.sendFile("gameboard.html", options, (err) => {
         if(err) {
-            console.log(err);
+            log(err, ERROR);
             res.end();
         }
     });
@@ -189,7 +161,7 @@ function handle_join(req, res) {
 // }
 
 function handle_default(req, res) {
-    console.log(`[!] Got bad request (${req.path}). Redirecting...`);
+    log(`Got bad request (${req.path}). Redirecting...`, ERROR);
     res.redirect("/");
 }
 
@@ -200,7 +172,6 @@ function handle_default(req, res) {
 io.on('connection', handle_connection);
 
 function handle_connection(socket) {
-    console.log("Connected socket!");
     handle_connect();
 
     // Set socket event handlers
@@ -211,9 +182,9 @@ function handle_connection(socket) {
     // Socket event handlers
     function handle_connect() {
 
-        // aux function used to send game status
+        // Aux function used to send game status
         function send_game(psock, game, role) {
-            // inform client of its role and current game state
+            // Inform client of its role and current game state
             psock.emit('setup', {
                 'role': role,
                 'board': game.get_board(),
@@ -222,23 +193,23 @@ function handle_connection(socket) {
             });
         }
 
-        // check if room exists
+        // Check if room exists
         let roomid = get_roomid(socket.request.headers.referer);
-        if(!Object.keys(rooms).includes(roomid)) {
-            console.log("[-] Socket connected to invalid room. Redirecting...");
+        if(!(roomid in rooms)) {
+            log("Socket connected to invalid room. Redirecting...", WARNING);
             socket.emit('redirect', {destination: "/"});
             return;
         }
 
-        console.log(`[+] New conn: ${socket.id} in room ${roomid}`)
+        log(`New conn: ${socket.id} in room ${roomid}`, SUCCESS)
 
-        // join virtual socket room
+        // Join virtual socket room
         socket.join(roomid);
 
-        // register player
+        // Register player
         players[socket.id] = {
-            socket: socket,
-            room: roomid
+            'socket': socket,
+            'room': roomid
         };
 
         let room = rooms[roomid];
@@ -264,18 +235,9 @@ function handle_connection(socket) {
                 }
                 room['spectators'] = [];
 
-            if(room['players'].length == 2) { // all players joined
-                console.log("\tGot full lobby");
-                let game = new super_ttt();
-                room['roles'] = Math.random() >= 0.5 ? ['X', 'O'] : ['O', 'X'];
+                log("\tGot full lobby");
+                game = new super_ttt();
                 room['game'] = game;
-                
-                for(let i = 0; i < 2; i++) {
-                    let player_id = room['players'][i];
-                    let psock = players[player_id]['socket'];
-                    let role = room['roles'][i];
-
-                    console.log(`\tP${i+1} (${player_id}): ${role}`);
 
                 for(const role of [X, O]) {
                     log(`\t${role}: ${room[role]}`);
@@ -283,28 +245,27 @@ function handle_connection(socket) {
                     send_game(psock, game, role);
                 }
 
-                // Use case:
-                // User1: Play -> waiting_room created
-                // User2: joins waiting_room via link
-                // User3: Play -> joins waiting_room (Spectator!!)
-                // FIXED: when full lobby, clear it
                 if(waiting_room === roomid) {
                     waiting_room = false;
                 }
-            }
 
-        } else { // new spectator
-            console.log("\tGot Spectator");
-            room['spectators'].push(socket.id);
-            let game = room['game']
-            send_game(socket, game, 'SPECTATOR');
+                break;
+            default:
+                // Assign spectator to anyone else (if X and O are already assigned)
+                log("\tGot Spectator");
+                room['spectators'].push(socket.id);
+                game = room['game']
+                send_game(socket, game, SPEC);
+                break;
         }
     }
 
     function handle_play(msg) {
         let roomid = get_roomid(socket.request.headers.referer);
+
+        if(!(roomid in rooms)) return;
+
         let room = rooms[roomid]
-        let players = room['players'];
 
         let player = false;
         if(room[X] == socket.id)        player = X;
@@ -316,13 +277,14 @@ function handle_connection(socket) {
             return;
         }
 
-        let player = room['roles'][idx];
+        
         let position = msg.position;
-        let game = room.game;
-        console.log(`[+] {${roomid}} ${player} played ${position}`);
+        let game = room['game'];
+        console.log(game.board);
+        log(`{${roomid}} ${player} played ${position}`, SUCCESS);
 
         let errors = game.play(player, position);
-        // console.log(game.get_history());
+        // log(game.get_history());
 
         if(errors.length === 0) {
             io.to(roomid).emit('new-play', {
@@ -332,44 +294,39 @@ function handle_connection(socket) {
             });
 
             if(game.get_valid_squares().length === 0) {
-                // game over
-                console.log(`GG: ${game.get_winner() ? game.get_winner() + " wins": "Tie"}`);
+                // Game over
+                log(`GG: ${game.get_winner() ? game.get_winner() + " wins": "Tie"}`);
                 io.to(roomid).emit('gg', {
                     'winner': game.get_winner(),
                 });
             }
         } else {
-            console.log("\tSending errors:");
+            log("\tSending errors:");
             for(const e of errors) {
-                console.log(`\t\t${e}`);
+                log(`\t\t${e}`);
             }
 
             socket.emit('invalid-play', errors);
         }
     }
 
-    function handle_new_game() {
-        if(!(socket.id in players)) {
-            console.log("Non-player asking for a new game");
-            return;
-        }
-        
-        // TODO: confirm with both players before creating new game
+    function handle_new_game() {        
+        // TODO: Confirm with both players before creating new game
         const roomid = players[socket.id]['room'];
         if(!(roomid in rooms)) {
-            console.log("room does not exist!");
+            log("Room does not exist!", WARNING);
             return;
         }
-        const game_players = rooms[roomid]['players']
-        let opponent = rooms[roomid]['players'][socket.id == game_players[0] ? 1 : 0];
-        console.log(`Opponent of ${socket.id}: ${opponent}`);
         
+        const room = rooms[roomid];
+        
+        // TODO: maybe shuffle roles
         
         // persist_game(players[socket.id].game);
-        console.log("Creating new game");
+        log("Creating new game", SUCCESS);
         let game = new super_ttt();
-        players[socket.id].game = game;
-        players[opponent].game = game;
+        console.log(game.board);
+        room['game'] = game;
 
         io.emit('state', {
             'board': game.get_board(),
@@ -379,32 +336,36 @@ function handle_connection(socket) {
     }
 
     function handle_disconnect() {
-        let roomid = get_roomid(socket.request.headers.referer);
-
-        // delete from players
-        if(socket.id in players) {
-            delete players[socket.id]
+        if(!(socket.id in players)) {
+            return;
         }
+        
+        let roomid = players[socket.id]['room'];
 
-        if(!Object.keys(rooms).includes(roomid)) {
-            // disconnecting from non existing room
+        // Delete from players
+        delete players[socket.id]
+
+        if(!(roomid in rooms)) {
+            // Disconnecting from non existing room
+            // (When one player disconnects, every other disconnects from same room)
             return;
         }
 
-        console.log(`[-] ${socket.id} disconnected from room ${roomid}`);
+        log(`${socket.id} disconnected from room ${roomid}`, WARNING);
 
         let room = rooms[roomid];
         
-        if(room['players'].includes(socket.id)) { // player disconnected
-            console.log('player disconnected');
+
+        if(room['spectators'].includes(socket.id)) { // Spectator disconnected
+            // Remove from spectators
+            let idx = room['spectators'].indexOf(socket.id);
+            room['spectators'].splice(idx, 1);
+            
+        } else { // Player disconnected
+            log(`Player ${socket.id} disconnected`, WARNING);
 
             io.to(roomid).emit('user-left');
             delete rooms[roomid];
-
-        } else { // spectator disconnected
-            // remove from spectators
-            let idx = room['spectators'].indexOf(socket.id);
-            room['spectators'].splice(idx, 1);
         }
     }
 }
@@ -416,7 +377,7 @@ function handle_connection(socket) {
 
 async function persist_game(game) {
     return;
-    console.log("Saving game")
+    log("Saving game")
     let winner = game.get_winner();
     if(!winner) {
         winner = "Tie";
@@ -453,20 +414,20 @@ const CYAN = `${color["cyan"]}`;
 const RED = `${color["red"]}`;
 
 function log_running() {
-    console.log("+============================+");
-    console.log(`|  Starting STTT by ${CYAN}AllTWay${RESET}  |`);
-    console.log("+==+=========================+");
-    console.log("   |");
-    console.log(`   +--=[${WHITE}Private IP${RESET}]=--> ${GREEN}${get_ipv4()}:${YELLOW}${PORT}${RESET}`);
-    console.log("   |");
-    console.log("   ."); // End Spacer
+    log("+============================+");
+    log(`|  Starting STTT by ${CYAN}AllTWay${RESET}  |`);
+    log("+==+=========================+");
+    log("   |");
+    log(`   +--=[${WHITE}Private IP${RESET}]=--> ${GREEN}${get_ipv4()}:${YELLOW}${PORT}${RESET}`);
+    log("   |");
+    log("   ."); // End Spacer
 }
 
 function log_dependencies() {
-    console.log(`${RED}Dependencies${RESET}`);
-    console.log(`${RED}  --> ${YELLOW}Express${RESET}`);
-    console.log(`${RED}  --> ${YELLOW}Express-Favicon${RESET}`);
-    console.log(".");
+    log(`${RED}Dependencies${RESET}`);
+    log(`${RED}  --> ${YELLOW}Express${RESET}`);
+    log(`${RED}  --> ${YELLOW}Express-Favicon${RESET}`);
+    log(".");
 }
 
 
@@ -481,3 +442,12 @@ function get_ipv4() {
         }
     }
 }
+
+const DEBUG = '*';
+const SUCCESS = '+';
+const WARNING = '-';
+const ERROR = 'x';
+function log(msg, level = DEBUG) {
+    console.log(`[${level}] ${msg}`);
+}
+
