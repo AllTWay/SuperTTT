@@ -31,6 +31,8 @@ socket.on('redirect', handle_redirect);
 socket.on('user-left', handle_user_left);
 
 function handle_setup(msg) {
+    setup();
+
     if (msg.role === X) {
         role = X;
     } else if (msg.role === O) {
@@ -82,6 +84,7 @@ function handle_error(msg) {
 }
 
 function handle_state(msg) {
+    setup();
     console.log("Got new game");
     set_turn(msg.next_player);
     set_valid(msg.valid_squares, msg.next_player);
@@ -133,6 +136,10 @@ function handle_new_game_out(e) {
 // ====================================
 function setup() {
     // build game board
+    while (gameGrid.firstChild) {
+        gameGrid.removeChild(gameGrid.firstChild);
+    }
+
     for(let sc=0; sc < 9; sc++) {
         const superCell = document.createElement("div");
         superCell.className = "super-cell";
