@@ -15,11 +15,11 @@ var io = socket(http);
 const shortid = require('shortid');
 
 // Database
-const firebase = require("firebase/app");
-require('firebase/database');
-var firebaseConfig = require("./firebase_config.js");
-firebase.initializeApp(firebaseConfig);
-var database = firebase.database();
+// const firebase = require("firebase/app");
+// require('firebase/database');
+// var firebaseConfig = require("./firebase_config.js");
+// firebase.initializeApp(firebaseConfig);
+// var database = firebase.database();
 
 // Game
 var super_ttt = require("./super_ttt.js");
@@ -65,7 +65,7 @@ function create_room() {
     let ids = Object.keys(rooms);
     do {
         id = shortid.generate();
-        // console.log(`Trying ${id}`);
+        console.log(`Trying ${id}`);
     } while (ids.includes(id));
 
     rooms[id] = {
@@ -76,7 +76,7 @@ function create_room() {
 }
 
 function get_roomid(url) {
-    return url.split(path.sep).slice(-1)[0];
+    return url.split('/').slice(-1)[0];
 }
 
 // Prevent MIME TYPE error by making html
@@ -102,7 +102,7 @@ app.get("/", handle_main);
 app.get("/play", handle_play);
 app.get("/party", handle_party);
 app.get("/game/:roomid", handle_join);
-app.get("/games", handle_games);
+// app.get("/games", handle_games);
 app.get("*", handle_default);
 
 function handle_main(req, res) {
@@ -127,6 +127,7 @@ function handle_main(req, res) {
 
 function handle_play(req, res) {
     if(!waiting_room) { // no room available
+        console.log("creating new room");
         waiting_room = create_room();
         res.redirect(`game/${waiting_room}`);
         console.log(`[+] Created MM room ${waiting_room}`);
@@ -175,12 +176,12 @@ function handle_join(req, res) {
     });
 }
 
-async function handle_games(req, res) {
-    res.statusCode = 200;
-    res.setHeader("Content-Type", "application/json");
-    let hist = await get_all_games();
-    res.send(JSON.stringify(hist, null, 4));
-}
+// async function handle_games(req, res) {
+//     res.statusCode = 200;
+//     res.setHeader("Content-Type", "application/json");
+//     let hist = await get_all_games();
+//     res.send(JSON.stringify(hist, null, 4));
+// }
 
 function handle_default(req, res) {
     console.log(`[!] Got bad request (${req.path}). Redirecting...`);
@@ -194,6 +195,7 @@ function handle_default(req, res) {
 io.on('connection', handle_connection);
 
 function handle_connection(socket) {
+    console.log("Connected socket!");
     handle_connect();
 
     // Set socket event handlers
@@ -259,7 +261,7 @@ function handle_connection(socket) {
                 // User1: Play -> waiting_room created
                 // User2: joins waiting_room via link
                 // User3: Play -> joins waiting_room (Spectator!!)
-                // FIX: when full lobby, clear it
+                // FIXED: when full lobby, clear it
                 if(waiting_room === roomid) {
                     waiting_room = false;
                 }
@@ -318,18 +320,25 @@ function handle_connection(socket) {
     }
 
     function handle_new_game() {
-        return;
         if(!(socket.id in players)) {
-            console.log("Spectator asking for a new game");
+            console.log("Non-player asking for a new game");
             return;
         }
-
-        persist_game(players[socket.id].game);
-
+        
+        // TODO: confirm with both players before creating new game
+        const roomid = players[socket.id]['room'];
+        if(!(roomid in rooms)) {
+            console.log("room does not exist!");
+            return;
+        }
+        const game_players = rooms[roomid]['players']
+        let opponent = rooms[roomid]['players'][socket.id == game_players[0] ? 1 : 0];
+        console.log(`Opponent of ${socket.id}: ${opponent}`);
+        
+        
+        // persist_game(players[socket.id].game);
         console.log("Creating new game");
-
         let game = new super_ttt();
-        let opponent = players[socket.id].opponent;
         players[socket.id].game = game;
         players[opponent].game = game;
 
@@ -377,6 +386,7 @@ function handle_connection(socket) {
 
 
 async function persist_game(game) {
+    return;
     console.log("Saving game")
     let winner = game.get_winner();
     if(!winner) {
@@ -393,6 +403,7 @@ async function persist_game(game) {
 }
 
 async function get_all_games() {
+    return;
     let history = await database.ref('games').once('value');
     return history.val();
 }

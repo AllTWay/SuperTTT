@@ -1,0 +1,18 @@
+{
+    "clients": {
+        "client_id": {
+            "socket": "<Socket>",
+            "room": "room_id"
+        }
+    },
+
+    "rooms": {
+        "room_id": {
+            "game": "<Game>",
+            "id": "id",
+            "x": "client_id",
+            "o": "client_id",
+            "spectators": []
+        }
+    }
+}
