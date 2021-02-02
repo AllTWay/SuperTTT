@@ -1,54 +1,53 @@
 "use strict";
+const express   = require("express");
+const favicon   = require("express-favicon");
+const socket    = require("socket.io");
+const shortid   = require('shortid');
+const RateLimit = require('express-rate-limit');
 
-// Server
-var os = require("os");
-var path = require("path");
+const super_ttt = require("./super_ttt.js");
+const {
+    log,
+    log_running,
+    DEBUG,
+    SUCCESS,
+    WARNING,
+    ERROR,
+} = require('./logging');
 
-var express = require("express");
-var app = express();
-var http = require('http').createServer(app);
-var favicon = require("express-favicon");
-
-var socket = require("socket.io");
-var io = socket(http);
-
-const shortid = require('shortid');
-
-const X = 'X';
-const O = 'O';
-const SPEC = 'SPECTATOR';
+const {
+    PORT,
+    FAVICON,
+    FRONTEND,
+    X,
+    O,
+    SPEC
+} = require('./globals');
 
 
-// Database
-// const firebase = require("firebase/app");
-// require('firebase/database');
-// var firebaseConfig = require("./firebase_config.js");
-// firebase.initializeApp(firebaseConfig);
-// var database = firebase.database();
+const app = express();
+const http = require('http').createServer(app);
+const io = socket(http);
+// Set up rate limiter: maximum of five requests per minute
+app.use(new RateLimit({
+    windowMs: 1000, // 1 second
+    max: 10,
+    message: "Whoops, we detected super high traffic from your computer... Try again later please :)"
+}));
 
-// Game
-var super_ttt = require("./super_ttt.js");
+// Prevent MIME TYPE error by making html
+// directory static and therefore usable
+app.use(express.static(FRONTEND));
+app.use(favicon(FAVICON));
 
-const PORT = 8080;
-const FAVICON = __dirname + "/../frontend/assets/img/hashtag.png";
-const FRONTEND = path.resolve(__dirname, "..", "frontend");
+// Use FRONTEND files when in route `/game`
+app.use('/game', express.static(FRONTEND));
+
 
 
 var players = {};
 var rooms = {};
 var waiting_room = false;
-
-
-// Set up rate limiter: maximum of five requests per minute
-var RateLimit = require('express-rate-limit');
-var limiter = new RateLimit({
-    windowMs: 1000, // 1 second
-    max: 10,
-    message: "Whoops, we detected super high traffic from your computer... Try again later please :)"
-});
-
-// Apply rate limiter to all requests | This tries to avoid DOS Attacks
-app.use(limiter);
 
 
 function create_room() {
@@ -70,15 +69,6 @@ function get_roomid(url) {
     return url.split('/').slice(-1)[0];
 }
 
-// Prevent MIME TYPE error by making html
-// Directory static and therefore usable
-app.use(express.static(FRONTEND));
-
-// Use FRONTEND files when in route `/game`
-app.use('/game', express.static(FRONTEND));
-
-// Set favicon
-app.use(favicon(FAVICON));
 
 // Run server
 http.listen(PORT, log_running);
@@ -377,89 +367,5 @@ function handle_connection(socket) {
             delete rooms[roomid];
         }
     }
-}
-
-// ===========================================
-//             Database stuff
-// ===========================================
-
-
-async function persist_game(game) {
-    return;
-    log("Saving game")
-    let winner = game.get_winner();
-    if(!winner) {
-        winner = "Tie";
-    }
-
-    let data = {
-        timestamp: Date.now(),
-        winner: winner,
-        moves: game.get_history()
-    }
-
-    database.ref('games').push(data);
-}
-
-async function get_all_games() {
-    return;
-    let history = await database.ref('games').once('value');
-    return history.val();
-}
-
-// ===========================================
-//      Fancy console logging by Migmac
-// ===========================================
-
-const colorModule = require("./console_colors.js");
-const color = colorModule.name;
-
-const WHITE = `${color["BGwhite"]}${color["black"]}`;
-const RESET = `${color["reset"]}`;
-const GREEN = `${color["green"]}`;
-const YELLOW = `${color["yellow"]}`;
-const CYAN = `${color["cyan"]}`;
-const RED = `${color["red"]}`;
-
-function log_running() {
-    log("+============================+");
-    log(`|  Starting STTT by ${CYAN}AllTWay${RESET}  |`);
-    log("+==+=========================+");
-    log("   |");
-    log(`   +--=[${WHITE}Private IP${RESET}]=--> ${GREEN}${get_ipv4()}:${YELLOW}${PORT}${RESET}`);
-    log("   |");
-    log("   ."); // End Spacer
-
-    log_dependencies();
-}
-
-
-function log_dependencies() {
-    log(`${RED}Dependencies${RESET}`);
-    log(`${RED}  --> ${YELLOW}Express${RESET}`);
-    log(`${RED}  --> ${YELLOW}Express-Favicon${RESET}`);
-    log(`${RED}  --> ${YELLOW}Express-Rate-Limit${RESET}`);
-    log(".");
-}
-
-
-function get_ipv4() {
-    var ifaces = os.networkInterfaces();
-    for(const iface in ifaces) {
-        for(const ix in ifaces[iface]) {
-            let addr = ifaces[iface][ix];
-            if(!addr.internal && addr.family === "IPv4") {
-                return addr.address;
-            }
-        }
-    }
-}
-
-const DEBUG = '*';
-const SUCCESS = '+';
-const WARNING = '-';
-const ERROR = 'x';
-function log(msg, level = DEBUG) {
-    console.log(`[${level}] ${msg}`);
 }
 
