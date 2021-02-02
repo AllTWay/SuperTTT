@@ -3,10 +3,34 @@
 // ===========================================
 
 const os = require("os");
-const colorModule = require("./console_colors.js");
-const color = colorModule.name;
-const { PORT } = require('./globals');
 
+const color = {
+    reset: "\x1b[0m",
+    bright: "\x1b[1m",
+    dim: "\x1b[2m",
+    underscore: "\x1b[4m",
+    blink: "\x1b[5m",
+    reverse: "\x1b[7m",
+    hidden: "\x1b[8m",
+
+    black: "\x1b[30m",
+    red: "\x1b[31m",
+    green: "\x1b[32m",
+    yellow: "\x1b[33m",
+    blue: "\x1b[34m",
+    magenta: "\x1b[35m",
+    cyan: "\x1b[36m",
+    white: "\x1b[37m",
+
+    BGblack: "\x1b[40m",
+    BGred: "\x1b[41m",
+    BGgreen: "\x1b[42m",
+    BGyellow: "\x1b[43m",
+    BGblue: "\x1b[44m",
+    BGmagenta: "\x1b[45m",
+    BGcyan: "\x1b[46m",
+    BGwhite: "\x1b[47m"
+}
 
 const WHITE = `${color["BGwhite"]}${color["black"]}`;
 const RESET = `${color["reset"]}`;
@@ -15,12 +39,28 @@ const YELLOW = `${color["yellow"]}`;
 const CYAN = `${color["cyan"]}`;
 const RED = `${color["red"]}`;
 
-function log_running() {
+function white(msg) {
+    return `${color["BGwhite"]}${color["black"]}${msg}${color["reset"]}`;
+}
+function green(msg) {
+    return `${color["green"]}${msg}${color["reset"]}`;
+}
+function yellow(msg) {
+    return `${color["yellow"]}${msg}${color["reset"]}`;
+}
+function cyan(msg) {
+    return `${color["cyan"]}${msg}${color["reset"]}`;
+}
+function red(msg) {
+    return `${color["red"]}${msg}${color["reset"]}`;
+}
+
+function log_running(port) {
     log("+============================+");
-    log(`|  Starting STTT by ${CYAN}AllTWay${RESET}  |`);
+    log(`|  Starting STTT by ${cyan("AllTWay")}  |`);
     log("+==+=========================+");
     log("   |");
-    log(`   +--=[${WHITE}Private IP${RESET}]=--> ${GREEN}${get_ipv4()}:${YELLOW}${PORT}${RESET}`);
+    log(`   +--=[${white("private ip")}]=--> ${green(get_ipv4())}:${yellow(port)}`);
     log("   |");
     log("   ."); // End Spacer
 
@@ -29,10 +69,10 @@ function log_running() {
 
 
 function log_dependencies() {
-    log(`${RED}Dependencies${RESET}`);
-    log(`${RED}  --> ${YELLOW}Express${RESET}`);
-    log(`${RED}  --> ${YELLOW}Express-Favicon${RESET}`);
-    log(`${RED}  --> ${YELLOW}Express-Rate-Limit${RESET}`);
+    log(`${red("Dependencies")}`);
+    log(`${red("  --> ")}${yellow("Express")}`);
+    log(`${red("  --> ")}${yellow("Express-Favicon")}`);
+    log(`${red("  --> ")}${yellow("Express-Rate-Limit")}`);
     log(".");
 }
 
@@ -56,6 +96,7 @@ const ERROR = 'x';
 function log(msg, level = DEBUG) {
     console.log(`[${level}] ${msg}`);
 }
+
 
 module.exports = {
     log,
