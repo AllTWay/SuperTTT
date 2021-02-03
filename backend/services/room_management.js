@@ -19,19 +19,14 @@ class RoomManagementService {
 
 
     create_room() {
-        // Find unique ID (make 100% sure)
-        let id;
-        // TODO: use `in`
         let ids = Object.keys(this.rooms);
-        do {
-            id = shortid.generate();
-            // log(`Trying ${id}`);
-        } while (ids.includes(id));
-
-        this.rooms[id] = {
-            'id': id
-        };
-        return id;
+        while(true) {
+            let id = shortid.generate();
+            if(!ids.includes(id)) {
+                this.rooms[id] = new Room(id);
+                return id;
+            }
+        }
     }
 
 
