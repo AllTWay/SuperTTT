@@ -1,7 +1,7 @@
 # SuperTTT
 Super Tic-Tac-Toe
 
-A project by Migmac and Afonsocrg to make the Super Tic-Tac-Toe game using Nodejs, Bootstrap and JavaScript
+A project by Migmac and afonsocrg to make the Super Tic-Tac-Toe game using Nodejs, Bootstrap and JavaScript
 
 
 
