@@ -55,9 +55,9 @@ function room_exists(room_id) {
 }
 
 
-function send_game(psock, game, role) {
+function send_game(session, game, role) {
     // Inform client of its role and current game state
-    psock.emit('setup', {
+    session.send('setup', {
         'role': role,
         'board': game.get_board(),
         'next_player': game.get_next_player(),
@@ -65,24 +65,18 @@ function send_game(psock, game, role) {
     });
 }
 
-function join_game(room_id, player_id, client_socket) {
+function join_game(session, room_id) {
 
     if(!room_exists(room_id)) {
-        log("Player connected to non-existing room. Redirecting...", WARNING);
-        client_socket.emit('redirect', {destination: "/"});
+        log("Session connected to non-existing room. Redirecting...", WARNING);
+        session.send('redirect', {destination: "/"});
         return;
     }
 
-    log(`[${room_id}]: New player (${player_id})`, SUCCESS)
+    log(`[${room_id}]: New player (${session.get_id()})`, SUCCESS)
 
     // Join virtual room
-    client_socket.join(room_id);
-
-    // Register player
-    players[player_id] = {
-        'socket': client_socket,
-        'room': room_id
-    };
+    session.join_room(room_id);
 
     let room = rooms[room_id];
     let nplayers = 0;
@@ -94,19 +88,20 @@ function join_game(room_id, player_id, client_socket) {
         }
     }
 
+    // let player_id = session.get_id();
     switch(nplayers) {
         case 0:
             // Assign random role to first player
-            room[Math.random() >= 0.5 ? X : O] = player_id;
+            room['spectators'] = [];
+            room[Math.random() >= 0.5 ? X : O] = session;
             break;
         case 1:
             // Check which role is empty and assign it to second player
             if(X in room) {
-                room[O] = player_id;
+                room[O] = session;
             } else {
-                room[X] = player_id;
+                room[X] = session;
             }
-            room['spectators'] = [];
 
             log("\tGot full lobby");
             game = new super_ttt();
@@ -114,8 +109,7 @@ function join_game(room_id, player_id, client_socket) {
 
             for(const role of [X, O]) {
                 log(`\t${role}: ${room[role]}`);
-                const psock = players[room[role]]['socket'];
-                send_game(psock, game, role);
+                send_game(room[role], game, role);
             }
 
             if(waiting_room === room_id) {
@@ -126,26 +120,27 @@ function join_game(room_id, player_id, client_socket) {
         default:
             // Assign spectator
             log("\tGot Spectator");
-            room['spectators'].push(player_id);
+            room['spectators'].push(session);
             game = room['game']
-            send_game(client_socket, game, SPEC);
+            send_game(session, game, SPEC);
             break;
     }
 }
 
-function play(io, room_id, player_id, client_socket, position) {
+function play(io, room_id, session, msg) {
 
     if(!room_exists(room_id)) {
         log("Player connected to non-existing room. Redirecting...", WARNING);
-        client_socket.emit('redirect', {destination: "/"});
+        session.send('redirect', {destination: "/"});
         return;
     }
 
     let room = rooms[room_id]
 
+    let player_id = session.get_id();
     let player = false;
-    if(room[X] == player_id)        player = X;
-    else if(room[O] == player_id)   player = O;
+    if      (room[X].get_id() == player_id) player = X;
+    else if (room[O].get_id() == player_id) player = O;
 
     if(!player) {
         // Player is not playing!
@@ -154,6 +149,12 @@ function play(io, room_id, player_id, client_socket, position) {
     }
 
     let game = room['game'];
+
+    if(!'position' in msg) {
+        log("Ignoring invalid play message");
+        return;
+    }
+    let position = msg['position'];
     log(`{${room_id}} ${player} played ${position}`, SUCCESS);
 
     let errors = game.play(player, position);
@@ -179,20 +180,21 @@ function play(io, room_id, player_id, client_socket, position) {
             log(`\t\t${e}`);
         }
 
-        client_socket.emit('invalid-play', errors);
+        session.send('invalid-play', errors);
     }
 }
 
 
-function disconnected(player_id) {
-    if(!(player_id in players)) {
+// TODO: refactor
+function disconnected(io, socket_id) {
+    if(!(socket_id in players)) {
         return;
     }
     
-    let room_id = players[player_id]['room'];
+    let room_id = players[socket_id]['room'];
 
     // Delete from players
-    delete players[player_id]
+    delete players[socket_id]
 
     if(!(room_id in rooms)) {
         // Disconnecting from non existing room
@@ -200,18 +202,18 @@ function disconnected(player_id) {
         return;
     }
 
-    log(`${socket.id} disconnected from room ${room_id}`, WARNING);
+    log(`${socket_id} disconnected from room ${room_id}`, WARNING);
 
     let room = rooms[room_id];
     
 
-    if(room['spectators'].includes(player_id)) { // Spectator disconnected
+    if(room['spectators'].includes(socket_id)) { // Spectator disconnected
         // Remove from spectators
-        let idx = room['spectators'].indexOf(player_id);
+        let idx = room['spectators'].indexOf(socket_id);
         room['spectators'].splice(idx, 1);
         
     } else { // Player disconnected
-        log(`Player ${socket.id} disconnected`, WARNING);
+        log(`Player ${socket_id} disconnected`, WARNING);
 
         io.to(room_id).emit('user-left');
         delete rooms[room_id];
