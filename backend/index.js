@@ -7,7 +7,7 @@ const RateLimit     = require("express-rate-limit");
 const cookieParser  = require('cookie-parser');
 const crypto        = require('crypto');
 
-const { router, socket_handler } = require('./router');
+const { router } = require('./router');
 const { log, log_running } = require('./logging');
 const client_registry = require('./services/client_registry');
 
@@ -49,11 +49,9 @@ app.use(favicon(FAVICON));
 app.use('/',     express.static(FRONTEND));
 app.use('/game', express.static(FRONTEND));
 
-router(app);
-
-
-// Run server
 const server = http.createServer(app);
 const io = socket(server);
-socket_handler(io);
+
+router(app, io);
+
 server.listen(PORT, () => { log_running(PORT); });

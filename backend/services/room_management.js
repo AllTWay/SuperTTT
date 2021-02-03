@@ -1,5 +1,6 @@
 'use strict';
 
+const Room = require('../domain/room');
 const shortid = require('shortid');
 const { log, DEBUG, SUCCESS, ERROR, WARNING } = require('../logging');
 const super_ttt = require("./super_ttt");
@@ -14,39 +15,41 @@ class RoomManagementService {
     constructor() {
         this.players = {};
         this.rooms = {};
+
+        // False if no waiting room exists
+        // else, room_id pointing to current waiting room
         this.waiting_room = false;
     }
 
 
-    create_room() {
+    create_room(io) {
         let ids = Object.keys(this.rooms);
         while(true) {
             let id = shortid.generate();
             if(!ids.includes(id)) {
-                this.rooms[id] = new Room(id);
+                this.rooms[id] = new Room(id, io.to(id));
                 return id;
             }
         }
     }
 
 
-    join_queue() {
-        // TODO: when having a class Room, maybe we won't want to return it
-        if(this.waiting_room) { // room available
+    join_queue(io) {
+        if(this.waiting_room) {
             let chosen = this.waiting_room;
-            log(`Joined MM room ${chosen}`, SUCCESS);
             this.waiting_room = false;
+            // log(`Joined MM room ${chosen}`, SUCCESS);
             return chosen;
         } else {
-            this.waiting_room = this.create_room();
-            log(`Created MM room ${this.waiting_room}`, SUCCESS);
+            this.waiting_room = this.create_room(io);
+            // log(`Created MM room ${this.waiting_room}`, SUCCESS);
             return this.waiting_room;
         }
     }
 
 
-    create_party() {
-        let room_id = this.create_room();
+    create_party(io) {
+        let room_id = this.create_room(io);
         log(`Created Party room ${room_id}`, SUCCESS);
         return room_id;
     }
@@ -69,69 +72,19 @@ class RoomManagementService {
 
     join_game(session, room_id) {
 
+        // TODO: maybe use getter that throws exception
         if(!this.room_exists(room_id)) {
             log("Session connected to non-existing room. Redirecting...", WARNING);
             session.send('redirect', {destination: "/"});
             return;
         }
 
-        log(`[${room_id}]: New player (${session.get_id()})`, SUCCESS)
-
-        // Join virtual room
-        session.join_room(room_id);
-
         let room = this.rooms[room_id];
-        let nplayers = 0;
-        let game;
-        
-        for(const role of [X, O] ) {
-            if(role in room) {
-                nplayers++;
-            }
-        }
-
-        // let player_id = session.get_id();
-        switch(nplayers) {
-            case 0:
-                // Assign random role to first player
-                room['spectators'] = [];
-                room[Math.random() >= 0.5 ? X : O] = session;
-                break;
-            case 1:
-                // Check which role is empty and assign it to second player
-                if(X in room) {
-                    room[O] = session;
-                } else {
-                    room[X] = session;
-                }
-
-                log("\tGot full lobby");
-                game = new super_ttt();
-                room['game'] = game;
-
-                for(const role of [X, O]) {
-                    log(`\t${role}: ${room[role]}`);
-                    this.send_game(room[role], game, role);
-                }
-
-                // TODO: why is this here? explain
-                if(this.waiting_room === room_id) {
-                    this.waiting_room = false;
-                }
-
-                break;
-            default:
-                // Assign spectator
-                log("\tGot Spectator");
-                room['spectators'].push(session);
-                game = room['game']
-                this.send_game(session, game, SPEC);
-                break;
-        }
+        room.join(session);
     }
 
     play(io, room_id, session, msg) {
-
+        // TODO: maybe use getter that throws exception
         if(!this.room_exists(room_id)) {
             log("Player connected to non-existing room. Redirecting...", WARNING);
             session.send('redirect', {destination: "/"});
@@ -139,52 +92,7 @@ class RoomManagementService {
         }
 
         let room = this.rooms[room_id]
-
-        let player_id = session.get_id();
-        let player = false;
-        if      (room[X].get_id() == player_id) player = X;
-        else if (room[O].get_id() == player_id) player = O;
-
-        if(!player) {
-            // Player is not playing!
-            log(`Non-player (${player_id}) tried to play in room ${room_id}`, WARNING);
-            return;
-        }
-
-        let game = room['game'];
-
-        if(!'position' in msg) {
-            log("Ignoring invalid play message");
-            return;
-        }
-        let position = msg['position'];
-        log(`{${room_id}} ${player} played ${position}`, SUCCESS);
-
-        let errors = game.play(player, position);
-        // log(game.get_history());
-
-        if(errors.length === 0) {
-            io.to(room_id).emit('new-play', {
-                'player': player,
-                'position': position,
-                'valid_squares': game.get_valid_squares(),
-            });
-
-            if(game.get_valid_squares().length === 0) {
-                // Game over
-                log(`GG: ${game.get_winner() ? game.get_winner() + " wins": "Tie"}`);
-                io.to(room_id).emit('gg', {
-                    'winner': game.get_winner(),
-                });
-            }
-        } else {
-            log("\tSending errors:");
-            for(const e of errors) {
-                log(`\t\t${e}`);
-            }
-
-            session.send('invalid-play', errors);
-        }
+        room.play(io, session, msg);
     }
 
 
