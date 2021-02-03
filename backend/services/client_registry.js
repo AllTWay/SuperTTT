@@ -1,46 +1,10 @@
 "use strict";
 
 const crypto = require('crypto');
+const Session = require('../domain/session');
 
-class Session {
-    constructor(id) {
-        this.id = id;
-        this.socket = false;
-    }
 
-    get_id() { return this.id; }
-
-    connect(socket) {
-        this.socket = socket;
-    }
-
-    disconnect() {
-        this.socket = false;
-    }
-
-    has_socket() {
-        return this.socket !== false;
-    }
-
-    send(msg, content) {
-        if(!this.has_socket()) {
-            // return;
-            throw "Client has no established connection";
-        }
-        this.socket.emit(msg, content);
-    }
-
-    // join roon
-    join_room(room_id) {
-        if(!this.has_socket()) {
-            // return;
-            throw "Client has no established connection";
-        }
-        this.socket.join(room_id);
-    }
-}
-
-class ClientRegistry {
+class ClientRegistryService {
     constructor() {
         this.sessions = {};                     // all established sessions
         this.connected_sessions = {};           // sessions by socket_id
@@ -89,4 +53,4 @@ class ClientRegistry {
     }
 }
 
-module.exports = new ClientRegistry();
+module.exports = new ClientRegistryService();
