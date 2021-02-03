@@ -1,6 +1,6 @@
 'use strict';
 const cookie = require('cookie');
-const matchmaking = require("./services/matchmaking");
+const room_management = require("./services/room_management");
 const client_registry = require("./services/client_registry");
 
 const {
@@ -49,13 +49,13 @@ function handle_main(req, res) {
 }
 
 function handle_play(req, res) {
-    let room = matchmaking.join_queue();
+    let room = room_management.join_queue();
     res.redirect(`game/${room}`);
 }
 
 
 function handle_party(req, res) {
-    let room = matchmaking.create_party();
+    let room = room_management.create_party();
     res.redirect(`game/${room}`);
 }
 
@@ -63,7 +63,7 @@ function handle_join(req, res) {
     let room_id = req.params.room_id;
 
     // Invalid room -> redirect to home page
-    if(!matchmaking.room_exists(room_id)) {
+    if(!room_management.room_exists(room_id)) {
         log(`User tried to join non-existing room #${room_id}`, WARNING);
         res.redirect("/");
         return;
@@ -133,7 +133,7 @@ function socket_handler(io) {
             client_registry.connect(session, socket);
 
             let room_id = room_id_from_url(socket.request.headers.referer);
-            matchmaking.join_game(session, room_id);
+            room_management.join_game(session, room_id);
         }
 
         function handle_play(msg) {
@@ -141,7 +141,7 @@ function socket_handler(io) {
             let session = client_registry.get_socket_session(socket.id);
 
             let position = msg.position;
-            let errors = matchmaking.play(io, room_id, session, msg);
+            let errors = room_management.play(io, room_id, session, msg);
         }
 
 
@@ -174,7 +174,7 @@ function socket_handler(io) {
 
         function handle_disconnect() {
             return;
-            // matchmaking.disconnected(io, socket.id);
+            // room_management.disconnected(io, socket.id);
         }
     }
 }
