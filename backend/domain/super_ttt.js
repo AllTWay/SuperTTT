@@ -249,7 +249,7 @@ class SuperTTT {
         // leaving it as an array. we may want to send several errors
         let errors = []; 
         if(player !== this.nextPlayer) {
-            console.log("Not your turn!");
+            // console.log("Not your turn!");
             errors.push("You can only play in your turn!");
             return errors;
         }

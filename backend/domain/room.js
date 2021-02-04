@@ -104,7 +104,6 @@ class Room {
             return;
         }
         let position = msg['position'];
-        log(`{${this.id}} ${player} played ${position}`, SUCCESS);
 
         let errors = this.game.play(player, position);
         if(errors.length > 0) {
@@ -115,7 +114,8 @@ class Room {
                 'position': position,
                 'valid_squares': this.game.get_valid_squares(),
             });
-                
+
+            log(`[${this.id}] ${player} played ${position}`, SUCCESS);
             if(this.game.get_valid_squares().length === 0) {
                 // Game over
                 log(`GG: ${this.game.get_winner() ? this.game.get_winner() + " wins": "Tie"}`);
