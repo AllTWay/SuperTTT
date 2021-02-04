@@ -7,7 +7,6 @@ const { log, DEBUG, SUCCESS, ERROR, WARNING } = require('../logging');
 class RoomManagementService {
 
     constructor() {
-        this.players = {};
         this.rooms = {};
 
         // False if no waiting room exists
