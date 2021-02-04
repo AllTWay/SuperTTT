@@ -31,10 +31,7 @@ app.use(function (req, res, next) {
 
     // WARNING: Do not replace with `if(result)` 
     // since it would evaluate to true
-    if (result === true) {
-        // valid cookie
-        next();
-    } else {
+    if (result !== true) {
         const options = {
             httpOnly: true,
             // secure: true, // TODO: HTTPS
@@ -42,7 +39,10 @@ app.use(function (req, res, next) {
         }
         res.cookie('sessionId', result, options);
         res.redirect('/');
+        return;
     } 
+
+    next();
 });
 
 app.use(favicon(FAVICON));
