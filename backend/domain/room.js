@@ -103,6 +103,12 @@ class Room {
             log("Ignoring invalid play message");
             return;
         }
+
+        if(this.game === false) {
+            // No active game
+            log("Failed to play: No active game");
+            return;
+        }
         let position = msg['position'];
 
         let errors = this.game.play(player, position);

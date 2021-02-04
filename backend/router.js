@@ -135,7 +135,6 @@ function router(app, io) {
             try {
                 let room_id = room_id_from_url(socket.request.headers.referer);
                 let session = client_registry.get_socket_session(socket.id);
-
                 room_management.play(room_id, session, msg);
             } catch (e) {
                 log(`${e}. Redirecting to /`, ERROR);
