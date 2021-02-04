@@ -3,12 +3,6 @@
 const Room = require('../domain/room');
 const shortid = require('shortid');
 const { log, DEBUG, SUCCESS, ERROR, WARNING } = require('../logging');
-const super_ttt = require("./super_ttt");
-const {
-    X, 
-    O, 
-    SPEC 
-} = require('../globals');
 
 class RoomManagementService {
 
