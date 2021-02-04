@@ -29,12 +29,12 @@ app.use(cookieParser());
 app.use(function (req, res, next) {
     let result = client_registry.check_request(req.cookies.sessionId);
 
+    // WARNING: Do not replace with `if(result)` 
+    // since it would evaluate to true
     if (result === true) {
         // valid cookie
-        // log(`[${req.cookies.sessionId}] ${req.method} ${req.path}`);
         next();
     } else {
-        // log(`Creating new cookie: ${result}`);
         const options = {
             httpOnly: true,
             // secure: true, // TODO: HTTPS

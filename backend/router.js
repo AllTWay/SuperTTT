@@ -4,6 +4,7 @@ const room_management = require("./services/room_management");
 const client_registry = require("./services/client_registry");
 
 const { FRONTEND } = require('./globals');
+const { log, DEBUG, SUCCESS, ERROR, WARNING } = require('./logging');
 
 function room_id_from_url(url) {
     return url.split('/').slice(-1)[0];
@@ -106,21 +107,27 @@ function router(app, io) {
         function handle_connect() {
             // get session_id
             let socket_cookies = cookie.parse(
-                socket.handshake.headers.cookie || 
-                socket.request.headers.cookie);
+                socket.handshake.headers.cookie || socket.request.headers.cookie
+            );
             let session_id = socket_cookies['sessionId'];
             console.log(`Session ${session_id} connected (socket ${socket.id})!`);
 
-            let session = client_registry.get_session(session_id);
-            if(session === false) {
+            let room_id = room_id_from_url(socket.request.headers.referer);
+            
+            try {
+                let session = client_registry.get_session(session_id);
+                client_registry.connect(session, socket);
+                room_management.join_game(session, room_id);
+            } catch(e) {
+                log(`${e}. Redirecting to /`, ERROR);
                 socket.emit('redirect', {destination: "/"});
                 return;
             }
+        }
 
-            client_registry.connect(session, socket);
-
-            let room_id = room_id_from_url(socket.request.headers.referer);
-            room_management.join_game(session, room_id);
+        function handle_disconnect() {
+            return;
+            // room_management.disconnected(io, socket.id);
         }
 
         function handle_play(msg) {
@@ -157,10 +164,6 @@ function router(app, io) {
             */
         }
 
-        function handle_disconnect() {
-            return;
-            // room_management.disconnected(io, socket.id);
-        }
     }
 
 }

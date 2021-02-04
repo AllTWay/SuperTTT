@@ -1,7 +1,7 @@
 "use strict";
 
 const { log, DEBUG, SUCCESS, ERROR, WARNING } = require('../logging');
-const super_ttt = require("../services/super_ttt");
+const super_ttt = require("./super_ttt");
 const {
     X, 
     O, 

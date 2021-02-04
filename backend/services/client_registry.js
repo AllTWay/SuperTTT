@@ -16,7 +16,7 @@ class ClientRegistryService {
 
     get_session(session_id) {
         if (!this.session_exists(session_id)) {
-            return false;
+            throw "Failed to get non existing session";
         } else {
             return this.sessions[session_id];
         }
