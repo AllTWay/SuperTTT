@@ -27,21 +27,23 @@ class Session {
         return this.socket !== false;
     }
 
-    send(msg, content) {
+    get_socket() {
         if(!this.has_socket()) {
             // return;
             throw "Client has no established connection";
         }
-        this.socket.emit(msg, content);
+        return this.socket
     }
 
-    // join roon
-    join_room(room_id) {
-        if(!this.has_socket()) {
-            // return;
-            throw "Client has no established connection";
-        }
-        this.socket.join(room_id);
+
+    // Send message to connected socket
+    send(msg, content) {
+        this.get_socket().emit(msg, content);
+    }
+
+    // Subscribe to room messages
+    subscribe(room_id) {
+        this.get_socket().join(room_id);
     }
 }
 

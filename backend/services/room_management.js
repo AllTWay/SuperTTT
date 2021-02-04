@@ -55,7 +55,7 @@ class RoomManagementService {
     }
 
 
-    join_game(session, room_id) {
+    join_room(session, room_id) {
         try {
             let room = this.get_room(room_id);
             room.join(session);

@@ -34,7 +34,7 @@ class Room {
     join(new_session) {
 
         // Make session listen for room events
-        new_session.join_room(this.id);
+        new_session.subscribe(this.id);
 
         switch(this.nplayers) {
             case 0: // first player!!

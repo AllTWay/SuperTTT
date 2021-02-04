@@ -117,8 +117,7 @@ function router(app, io) {
             try {
                 client_registry.connect(session_id, socket);
                 let session = client_registry.get_session(session_id);
-                room_management.join_game(session, room_id);
-                console.log(`Session ${session_id} connected to room ${room_id} (socket ${socket.id})!`);
+                room_management.join_room(session, room_id);
             } catch(e) {
                 log(`${e}. Redirecting to /`, ERROR);
                 socket.emit('redirect', {destination: "/"});
