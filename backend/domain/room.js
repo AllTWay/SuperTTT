@@ -1,12 +1,9 @@
 "use strict";
 
 const { log, DEBUG, SUCCESS, ERROR, WARNING } = require('../logging');
-const super_ttt = require("./super_ttt");
-const {
-    X, 
-    O, 
-    SPEC 
-} = require('../globals');
+const { X, O, SuperTTT } = require("./super_ttt");
+
+const SPEC = "Spectator";
 
 /**
  * Represents a logical game room
@@ -59,7 +56,7 @@ class Room {
                     throw "Room error: something went wrong while joining";
                 }
 
-                this.game = new super_ttt();
+                this.game = new SuperTTT();
 
                 // TODO: make this beautiful
                 this.X.send('setup', {

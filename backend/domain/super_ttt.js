@@ -1,5 +1,8 @@
 "use strict"
 
+const X = "X";
+const O = "O";
+
 class Cell {
     constructor() {
         this.winner = ' ';
@@ -186,8 +189,6 @@ class Board {
         };
     }
 };
-const x = 'X';
-const o = 'O';
 
 class SuperTTT {
     constructor() {
@@ -200,7 +201,7 @@ class SuperTTT {
     // keeping this method just in case
     reset() {
         this.board.reset();
-        this.nextPlayer = x;
+        this.nextPlayer = X;
         this.winner = ' '; // needs to be like this (recursion)
         this.history = [];
 
@@ -267,7 +268,7 @@ class SuperTTT {
         // this.history.push([player, position]);
         this.history.push(position); // save only the position
 
-        this.nextPlayer = (this.nextPlayer === x ? o : x);
+        this.nextPlayer = (this.nextPlayer === X ? O : X);
         this.valid_plays = this.board.calc_valid_plays(position);
         this.winner = this.board.get_winner();
 
@@ -284,4 +285,4 @@ class SuperTTT {
     }
 }
 
-module.exports = SuperTTT;
+module.exports = { X, O, SuperTTT }
