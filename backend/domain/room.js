@@ -88,7 +88,7 @@ class Room {
         }
     }
 
-    play(io, player_session, msg) {
+    play(player_session, msg) {
         let session_id = player_session.id;
         let player = false;
         if      (this.X.get_id() == session_id) player = X;

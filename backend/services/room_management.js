@@ -77,7 +77,7 @@ class RoomManagementService {
         room.join(session);
     }
 
-    play(io, room_id, session, msg) {
+    play(room_id, session, msg) {
         // TODO: maybe use getter that throws exception
         if(!this.room_exists(room_id)) {
             log("Player connected to non-existing room. Redirecting...", WARNING);
@@ -86,7 +86,7 @@ class RoomManagementService {
         }
 
         let room = this.rooms[room_id]
-        room.play(io, session, msg);
+        room.play(session, msg);
     }
 
 
