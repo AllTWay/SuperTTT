@@ -105,19 +105,20 @@ function router(app, io) {
 
         // Socket event handlers
         function handle_connect() {
-            // get session_id
             let socket_cookies = cookie.parse(
                 socket.handshake.headers.cookie || socket.request.headers.cookie
             );
-            let session_id = socket_cookies['sessionId'];
-            console.log(`Session ${session_id} connected (socket ${socket.id})!`);
 
+            let session_id = socket_cookies['sessionId'];
             let room_id = room_id_from_url(socket.request.headers.referer);
             
+            // For now a socket is created only when joining a game
+            // So we always join a room
             try {
+                client_registry.connect(session_id, socket);
                 let session = client_registry.get_session(session_id);
-                client_registry.connect(session, socket);
                 room_management.join_game(session, room_id);
+                console.log(`Session ${session_id} connected to room ${room_id} (socket ${socket.id})!`);
             } catch(e) {
                 log(`${e}. Redirecting to /`, ERROR);
                 socket.emit('redirect', {destination: "/"});

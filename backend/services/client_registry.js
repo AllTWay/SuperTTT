@@ -34,20 +34,19 @@ class ClientRegistryService {
     }
 
     // Associates a session to a socket
-    connect(session, socket) {
-        let session_id = session.get_id();
-        if(!this.session_exists(session_id)) {
-            throw "Failed to connect non-existent session";
+    connect(session_id, socket) {
+        try {
+            let session = this.get_session(session_id);
+            session.connect(socket);
+            this.connected_sessions[socket.id] = session
+        } catch (e) {
+            throw `Failed to connect non-existent session\n\t${e}`;
         }
-
-        session.connect(socket);
-        this.connected_sessions[socket.id] = session
     }
 
     get_socket_session(socket_id) { 
         if(!socket_id in this.connected_sessions) {
             throw "Socket not registered";
-            return;
         }
         return this.connected_sessions[socket_id];
     }
