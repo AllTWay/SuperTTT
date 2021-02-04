@@ -14,6 +14,17 @@ class RoomManagementService {
         this.waiting_room = false;
     }
 
+    room_exists(room_id) {
+        return room_id in this.rooms;
+    }
+
+    get_room(room_id) {
+        if(!this.room_exists(room_id)) {
+            throw "Room does not exist"
+        }
+        return this.rooms[room_id];
+    }
+
 
     create_room(io) {
         let ids = Object.keys(this.rooms);
@@ -26,16 +37,13 @@ class RoomManagementService {
         }
     }
 
-
     join_queue(io) {
         if(this.waiting_room) {
             let chosen = this.waiting_room;
             this.waiting_room = false;
-            // log(`Joined MM room ${chosen}`, SUCCESS);
             return chosen;
         } else {
             this.waiting_room = this.create_room(io);
-            // log(`Created MM room ${this.waiting_room}`, SUCCESS);
             return this.waiting_room;
         }
     }
@@ -43,49 +51,26 @@ class RoomManagementService {
 
     create_party(io) {
         let room_id = this.create_room(io);
-        log(`Created Party room ${room_id}`, SUCCESS);
         return room_id;
     }
 
 
-    room_exists(room_id) {
-        return room_id in this.rooms;
-    }
-
-
-    send_game(session, game, role) {
-        // Inform client of its role and current game state
-        session.send('setup', {
-            'role': role,
-            'board': game.get_board(),
-            'next_player': game.get_next_player(),
-            'valid_squares': game.get_valid_squares(),
-        });
-    }
-
     join_game(session, room_id) {
-
-        // TODO: maybe use getter that throws exception
-        if(!this.room_exists(room_id)) {
-            log("Session connected to non-existing room. Redirecting...", WARNING);
-            session.send('redirect', {destination: "/"});
-            return;
+        try {
+            let room = this.get_room(room_id);
+            room.join(session);
+        } catch (e) {
+            throw `Failed to join game: ${e}`;
         }
-
-        let room = this.rooms[room_id];
-        room.join(session);
     }
 
     play(room_id, session, msg) {
-        // TODO: maybe use getter that throws exception
-        if(!this.room_exists(room_id)) {
-            log("Player connected to non-existing room. Redirecting...", WARNING);
-            session.send('redirect', {destination: "/"});
-            return;
+        try {
+            let room = this.get_room(room_id);
+            room.play(session, msg);
+        } catch (e) {
+            throw `Failed to play: ${e}`;
         }
-
-        let room = this.rooms[room_id]
-        room.play(session, msg);
     }
 
 
