@@ -90,6 +90,12 @@ class Room {
 
     play(player_session, msg) {
         let session_id = player_session.id;
+
+        if(this.game === false || !this.X || !this.O) {
+            log("Room is not ready to play");
+            return;
+        }
+
         let player = false;
         if      (this.X.get_id() == session_id) player = X;
         else if (this.O.get_id() == session_id) player = O;
@@ -104,11 +110,6 @@ class Room {
             return;
         }
 
-        if(this.game === false) {
-            // No active game
-            log("Failed to play: No active game");
-            return;
-        }
         let position = msg['position'];
 
         let errors = this.game.play(player, position);
