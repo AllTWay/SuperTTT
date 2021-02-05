@@ -51,7 +51,6 @@ class ClientRegistryService {
             let connection = new Connection(session, socket);
             let id = socket.id;
             this.connections[id] = connection;
-            console.log(`${session_id} connected with ${socket.id}`);
             return connection;
         } catch (e) {
             throw `Failed to connect session\n\t${e}`;
