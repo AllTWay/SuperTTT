@@ -7,15 +7,34 @@ const { log, DEBUG, SUCCESS, ERROR, WARNING } = require('../logging');
 class RoomManagementService {
 
     constructor() {
+
+        // Stores all existing rooms
+        // rooms are stored by their unique id
         this.rooms = {};
 
         // False if no waiting room exists
-        // else, room_id pointing to current waiting room
+        // else, room_id of current waiting room
         this.waiting_room = false;
+
+        // stores the last room a session
+        // disconnected from
+        this.zombie_rooms = {};
+
+        // association gets room that holds a 
+        // specific connection
+        this.connection_rooms = {};
     }
 
     room_exists(room_id) {
         return room_id in this.rooms;
+    }
+
+    has_connection(connection_id) {
+        return connection_id in this.connection_rooms;
+    }
+
+    is_reconnecting(session_id) {
+        return session_id in this.zombie_rooms;
     }
 
     get_room(room_id) {
@@ -25,89 +44,86 @@ class RoomManagementService {
         return this.rooms[room_id];
     }
 
+    get_connection_room(connection_id) {
+        if(!this.has_connection(connection_id)) {
+            throw "Connection does not exist"
+        }
+        return this.connection_rooms[connection_id];
+    }
 
     create_room(io) {
         let ids = Object.keys(this.rooms);
         while(true) {
             let id = shortid.generate();
             if(!ids.includes(id)) {
-                this.rooms[id] = new Room(id, io.to(id));
+                this.rooms[id] = new Room(id, io);
                 return id;
             }
         }
     }
 
-    join_queue(io) {
-        if(this.waiting_room) {
-            let chosen = this.waiting_room;
-            this.waiting_room = false;
-            return chosen;
-        } else {
-            this.waiting_room = this.create_room(io);
-            return this.waiting_room;
+    join_queue(io, session) {
+        // Check if a client is reconnecting
+        let sid = session.get_id();
+        if(this.is_reconnecting(sid)) {
+            let room = this.zombie_rooms[sid];
+            return room.get_id();
         }
-    }
 
+        if(this.waiting_room === false) {
+            this.waiting_room = this.create_room(io);
+        }
+        return this.waiting_room;
+    }
 
     create_party(io) {
         let room_id = this.create_room(io);
         return room_id;
     }
 
-
-    join_room(session, room_id) {
+    join_room(room_id, connection) {
         try {
             let room = this.get_room(room_id);
-            room.join(session);
+            room.join(connection);
+
+            // Remember which room this connection belongs to
+            this.connection_rooms[connection.get_id()] = room;
+
+            // check if waiting room is full
+            if(room_id === this.waiting_room && room.is_full()) {
+                this.waiting_room = false;
+            }
+
+            // check if reconnected (delete zombie session)
+            let sid = connection.get_session_id();
+            if(this.is_reconnecting(sid)) {
+                delete this.zombie_rooms[sid];
+            }
         } catch (e) {
-            throw `Failed to join game: ${e}`;
+            throw `Failed to join room: ${e}`;
         }
     }
 
-    play(room_id, session, msg) {
+    leave_room(connection) {
+        let cid = connection.get_id();
+        let room = this.get_connection_room(cid);
+        delete this.connection_rooms[cid];
+
+        let player_left = room.leave(connection);
+        if(player_left) {
+            let sid = connection.get_session_id();
+            this.zombie_rooms[sid] = room;
+        }
+    }
+
+    play(room_id, connection, msg) {
         try {
             let room = this.get_room(room_id);
-            room.play(session, msg);
+            room.play(connection, msg);
         } catch (e) {
             throw `Failed to play: ${e}`;
         }
     }
-
-
-    // TODO: refactor
-    /* disconnected(io, socket_id) {
-        if(!(socket_id in players)) {
-            return;
-        }
-        
-        let room_id = players[socket_id]['room'];
-
-        // Delete from players
-        delete players[socket_id]
-
-        if(!(room_id in rooms)) {
-            // Disconnecting from non existing room
-            // (When one player disconnects, every other disconnects from same room)
-            return;
-        }
-
-        log(`${socket_id} disconnected from room ${room_id}`, WARNING);
-
-        let room = rooms[room_id];
-        
-
-        if(room['spectators'].includes(socket_id)) { // Spectator disconnected
-            // Remove from spectators
-            let idx = room['spectators'].indexOf(socket_id);
-            room['spectators'].splice(idx, 1);
-            
-        } else { // Player disconnected
-            log(`Player ${socket_id} disconnected`, WARNING);
-
-            io.to(room_id).emit('user-left');
-            delete rooms[room_id];
-        }
-    }*/
 }
 
 module.exports = new RoomManagementService();
