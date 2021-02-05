@@ -66,7 +66,6 @@ class Board {
         }
 
         if(position >= Math.pow(9, this.level+1)) {
-            console.log(Math.pow(9, this.level+1));
             throw "Position out of range";
         }
 
