@@ -42,7 +42,8 @@ function router(app, io) {
     }
 
     function handle_play(req, res) {
-        let room = room_management.join_queue(io);
+        let session = client_registry.get_session(req.cookies.sessionId);
+        let room = room_management.join_queue(io, session);
         res.redirect(`game/${room}`);
     }
 
@@ -115,9 +116,8 @@ function router(app, io) {
             // For now a socket is created only when joining a game
             // So we always join a room
             try {
-                client_registry.connect(session_id, socket);
-                let session = client_registry.get_session(session_id);
-                room_management.join_room(session, room_id);
+                let connection = client_registry.connect(session_id, socket);
+                room_management.join_room(room_id, connection);
             } catch(e) {
                 log(`${e}. Redirecting to /`, ERROR);
                 socket.emit('redirect', {destination: "/"});
@@ -126,15 +126,19 @@ function router(app, io) {
         }
 
         function handle_disconnect() {
-            return;
-            // room_management.disconnected(io, socket.id);
+            try {
+                let connection = client_registry.disconnect(socket.id);
+                room_management.leave_room(connection);
+            } catch (e) {
+                log(e, ERROR);
+            }
         }
 
         function handle_play(msg) {
             try {
                 let room_id = room_id_from_url(socket.request.headers.referer);
-                let session = client_registry.get_socket_session(socket.id);
-                room_management.play(room_id, session, msg);
+                let connection = client_registry.get_connection(socket.id);
+                room_management.play(room_id, connection, msg);
             } catch (e) {
                 log(`${e}. Redirecting to /`, ERROR);
                 socket.emit('redirect', {destination: "/"});

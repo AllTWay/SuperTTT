@@ -2,24 +2,35 @@
 
 const crypto = require('crypto');
 const Session = require('../domain/session');
+const Connection = require('../domain/connection');
 
 
 class ClientRegistryService {
     constructor() {
-        this.sessions = {};                     // all established sessions
-        this.connected_sessions = {};           // sessions by socket_id
+        this.sessions = {};     // Established Sessions
+        this.connections = {};  // Established Connections
     }
 
     session_exists(session_id) {
         return session_id in this.sessions;
     }
 
+    connection_exists(connection_id) {
+        return connection_id in this.connections;
+    }
+
     get_session(session_id) {
         if (!this.session_exists(session_id)) {
             throw "Failed to get non existing session";
-        } else {
-            return this.sessions[session_id];
         }
+        return this.sessions[session_id];
+    }
+
+    get_connection(connection_id) {
+        if(!this.connection_exists(connection_id)) {
+            throw "Failed to get non existing connection";
+        }
+        return this.connections[connection_id];
     }
 
     // Checks request cookie (validates if session exists)
@@ -37,18 +48,27 @@ class ClientRegistryService {
     connect(session_id, socket) {
         try {
             let session = this.get_session(session_id);
-            session.connect(socket);
-            this.connected_sessions[socket.id] = session
+            let connection = new Connection(session, socket);
+            let id = socket.id;
+            this.connections[id] = connection;
+            console.log(`${session_id} connected with ${socket.id}`);
+            return connection;
         } catch (e) {
-            throw `Failed to connect non-existent session\n\t${e}`;
+            throw `Failed to connect session\n\t${e}`;
         }
     }
 
-    get_socket_session(socket_id) { 
-        if(!socket_id in this.connected_sessions) {
-            throw "Socket not registered";
+    disconnect(socket_id) {
+        try {
+            let connection = this.get_connection(socket_id);
+
+            // Just deletes from this.connections
+            // The connection object still exists
+            delete this.connections[socket_id];
+            return connection;
+        } catch (e) {
+            throw `Failed to disconnect socket\n\t${e}`;
         }
-        return this.connected_sessions[socket_id];
     }
 }
 
