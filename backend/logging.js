@@ -39,21 +39,11 @@ const YELLOW = `${color["yellow"]}`;
 const CYAN = `${color["cyan"]}`;
 const RED = `${color["red"]}`;
 
-function white(msg) {
-    return `${color["BGwhite"]}${color["black"]}${msg}${color["reset"]}`;
-}
-function green(msg) {
-    return `${color["green"]}${msg}${color["reset"]}`;
-}
-function yellow(msg) {
-    return `${color["yellow"]}${msg}${color["reset"]}`;
-}
-function cyan(msg) {
-    return `${color["cyan"]}${msg}${color["reset"]}`;
-}
-function red(msg) {
-    return `${color["red"]}${msg}${color["reset"]}`;
-}
+function white(msg)     { return `${color["BGwhite"]}${color["black"]}${msg}${color["reset"]}`; }
+function green(msg)     { return `${color["green"]}${msg}${color["reset"]}`; }
+function yellow(msg)    { return `${color["yellow"]}${msg}${color["reset"]}`; }
+function cyan(msg)      { return `${color["cyan"]}${msg}${color["reset"]}`; }
+function red(msg)       { return `${color["red"]}${msg}${color["reset"]}`; }
 
 function log_running(port) {
     log("+============================+");
@@ -106,4 +96,3 @@ module.exports = {
     WARNING,
     ERROR,
 }
-    
