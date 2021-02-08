@@ -54,4 +54,8 @@ const io = socket(server);
 
 router(app, io);
 
-server.listen(PORT, () => { log_running(PORT); });
+const options = {
+      host: 'localhost', // only accessible from own computer
+      port: PORT,
+};
+server.listen(options, () => { log_running(PORT); });
