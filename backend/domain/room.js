@@ -192,7 +192,7 @@ class Room {
         });
 
         log(`[${this.id}] ${role} played ${position}`, SUCCESS);
-        if(this.game.get_valid_squares().length === 0) {
+        if(this.game.is_game_over()) {
             // Game over
             log(`GG: ${this.game.get_winner() ? this.game.get_winner() + " wins": "Tie"}`);
             this.broadcast('gg', {
