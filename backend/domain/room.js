@@ -76,7 +76,7 @@ class Room {
         return Date.now() - this.disconnect_timestamp <= RECONNECT_TIMEOUT
     }
 
-    // A room is full if it has two players
+    // A room is full if it has two players (even if they disconnected)
     is_full() {
         return Object.keys(this.players).length == 2;
     }
@@ -160,7 +160,8 @@ class Room {
     play(player_connection, msg) {
 
         if(this.game === false || !this.is_full()) {
-            throw "Room is not ready to play";
+            // throw "Room is not ready to play";
+            return;
         }
 
         if (!(player_connection.get_id() in this.players)) {
