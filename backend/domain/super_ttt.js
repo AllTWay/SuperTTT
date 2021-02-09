@@ -77,7 +77,9 @@ class SuperTTT {
         return res;
     }
 
-    is_game_over() { return this.winner !== false; }
+    is_game_over() {
+        return this.winner !== false || this.get_valid_plays().length === 0;
+    }
 
     play(player, position) {
         let errors = []; 
