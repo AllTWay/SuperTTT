@@ -28,7 +28,9 @@ socket.on('invalid-play', handle_error);
 socket.on('state', handle_state);
 socket.on('gg', handle_gg);
 socket.on('redirect', handle_redirect);
-socket.on('user-left', handle_user_left);
+// socket.on('user-left', handle_user_left);
+socket.on('n-spectators', handle_n_spectators);
+socket.on('player-disconnected', handle_player_disconnected);
 
 function handle_setup(msg) {
     if (msg.role === X) {
@@ -105,6 +107,13 @@ function handle_user_left(msg) {
     window.location.href = "/";
 }
 
+function handle_n_spectators(msg) {
+    console.log(msg);
+}
+
+function handle_player_disconnected(msg) {
+    console.log("Player disconnected!");
+}
 
 // ====================================
 //             DOM handling
@@ -211,7 +220,9 @@ function set_turn(player) {
 
 function set_board(board) {
     for (let i = 0; i < 81; i++) {
-        document.querySelector(`#game-cell-${i}`).innerText = board[i];
+        document.querySelector(`#game-cell-${i}`).innerText = (
+            board[i] === false ? " " : board[i]
+        );
     }
 
     gameBoard = board;
@@ -287,7 +298,7 @@ function set_valid(valid, player) {
 function check_winner(smallBoard) {
     // check vertical
     for(let i = 0; i < 3; i++) {
-        if(smallBoard[i] !== " " 
+        if(smallBoard[i] !== false
         && smallBoard[i] === smallBoard[i+3] 
         && smallBoard[i] === smallBoard[i+6]) {
             return smallBoard[i];
@@ -296,7 +307,7 @@ function check_winner(smallBoard) {
 
     // check horizontal
     for(let i = 0; i < 9; i+=3) {
-        if( smallBoard[i] !== " "
+        if( smallBoard[i] !== false
         && smallBoard[i] === smallBoard[i+1]
         && smallBoard[i] === smallBoard[i+2]) {
             return smallBoard[i];
@@ -304,7 +315,7 @@ function check_winner(smallBoard) {
     }
 
     // check diagonals
-    if(smallBoard[4] !== " "
+    if(smallBoard[4] !== false
     && (smallBoard[0] === smallBoard[4] && smallBoard[4] === smallBoard[8]
      || smallBoard[2] === smallBoard[4] && smallBoard[4] === smallBoard[6])
     ) {
