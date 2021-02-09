@@ -63,13 +63,6 @@ class RoomManagementService {
     }
 
     join_queue(io, session) {
-        // Check if a client is reconnecting
-        let sid = session.get_id();
-        if(this.is_reconnecting(sid)) {
-            let room = this.zombie_rooms[sid];
-            return room.get_id();
-        }
-
         if(this.waiting_room === false) {
             this.waiting_room = this.create_room(io);
         }
