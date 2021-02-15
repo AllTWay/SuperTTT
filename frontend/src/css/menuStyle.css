@@ -64,11 +64,16 @@ body {
     margin-bottom: 30px;
     width: 400px;
     height: 50px;
-    background: #959595;
     border-radius: 20px;
     border-width: 0px;
+    background: #959595;
     color: #FFFFFF;
     font-size: 20px;
+}
+
+.card .buttons button.disabled,
+.card .buttons button.disabled:hover {
+    background: #bbbbbb;
 }
 
 .card .buttons button:hover {
