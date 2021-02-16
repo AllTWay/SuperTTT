@@ -44,6 +44,7 @@ body {
 }
 
 .game-grid {
+    margin-top: 5%;
     display: grid;
     align-self: center;
     grid-template-columns: repeat(3, 1fr);
