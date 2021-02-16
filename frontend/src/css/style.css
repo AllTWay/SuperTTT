@@ -11,17 +11,6 @@ body {
     min-width:600px; 
 }
 
-.game-container {
-    border-radius: 25px;
-    margin: 50px;
-    padding: 50px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    max-width: 700px;
-    border: 2px solid #9E9E9E;
-}
-
 .title {
     text-align: center;
 }
