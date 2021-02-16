@@ -5,20 +5,28 @@
     <title>Super Tic-Tac-Toe</title>
     <meta charset="UTF-8">
 
+    <!-- Font -->
+    <link href="src/fonts/Quicksand/quicksand.css" rel="stylesheet">
+
     <!-- Custom compiled Bootstrap -->
     <link rel="stylesheet" href="src/css/bootstrap.css">
 
-    <!-- Custom css -->
-    <link rel="stylesheet" href="src/css/style.css">
-
     <!-- ion Icons -->
     <link rel="stylesheet" href="src/fonts/ionicons/css/ionicons.min.css">
+
+    <!-- Custom css -->
+    <link rel="stylesheet" href="src/css/gameStyle.css">
+
+    <!-- Theme -->
+    <link rel="stylesheet" href="src/css/themes/DefaultTheme.css">
 </head>
 
-<body class="bg-brown-100">
-
-    <div class="game-container" id="game-container-0">
-        <h1 class="title" id="title-0">Super Tic Tac Toe</h1>
+<body>
+    <div class="card" id="game-container-0">
+        <div class="title">
+            Super Tic-Tac-Toe
+            <div class="spacer"></div>
+        </div>
         <div class="control">
             <div class="status">
                 <p id="nextPlayer">X turn</p>
@@ -31,7 +39,7 @@
             </div>
         </div>
         <div class="game-grid" id="game-grid-0">
-            <!-- will be filled dynamically -->
+            <!-- Filled dynamically -->
         </div>
     </div>
     <script src="/socket.io/socket.io.js"></script>

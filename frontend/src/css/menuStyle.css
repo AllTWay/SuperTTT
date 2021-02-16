@@ -9,7 +9,7 @@ body {
     font-weight: normal;
     display: flex;
     text-align: center;
-    background-color: #1E1E1E;
+    background-color: var(--background);
 }
 
 .card {
@@ -19,7 +19,7 @@ body {
     transform: translate(-50%, -50%);
     width: 500px;
     height: 550px;
-    background: #C4C4C4;
+    background: var(--card-background);
     box-shadow: 0px 4px 4px rgba(0, 0, 0, 0.25);
     border-radius: 50px;
     border-width: 0px;
@@ -38,7 +38,7 @@ body {
     display: flex;
     align-items: center;
     display: block;
-    color: #FFFFFF;
+    color: var(--card-title);
 }
 
 .card .title p span {
@@ -51,7 +51,7 @@ body {
     transform: translate(-50%, 0%);
     width: 400px;
     height: 0px;
-    border: 1px solid #FFFFFF;
+    border: 1px solid var(--card-title);
 }
 
 .card .buttons {
@@ -66,20 +66,20 @@ body {
     height: 50px;
     border-radius: 20px;
     border-width: 0px;
-    background: #959595;
-    color: #FFFFFF;
+    background: var(--button-background);
+    color: var(--button-title);
     font-size: 20px;
 }
 
 .card .buttons button.disabled,
 .card .buttons button.disabled:hover {
-    background: #bbbbbb;
+    background: var(--button-disabled);
 }
 
 .card .buttons button:hover {
-    background: #777777;
+    background: var(--button-hover);
 }
 
 .card .buttons button:active {
-    background: #343434;
+    background: var(--button-active);
 }

@@ -1,0 +1,25 @@
+:root {
+    --background: rgb(255, 255, 255);
+}
+
+:root {
+    --card-background: rgb(196, 196, 196);
+    --card-title: rgb(255, 255, 255);
+    --card-text: rgb(90, 90, 90);
+}
+
+:root {
+    --button-background: rgb(149, 149, 149);
+    --button-title: rgb(255, 255, 255);
+    --button-disabled: rgb(187, 187, 187);
+    --button-hover: rgb(119, 119, 119);
+    --button-active: rgb(52, 52, 52);
+}
+
+:root {
+    --grid-bg-line-size: 3px;
+    --grid-bg-line-color: rgb(97, 97, 97);
+    /*  */
+    --grid-sm-line-size: 3px;
+    --grid-sm-line-color: rgb(97, 97, 97);
+}

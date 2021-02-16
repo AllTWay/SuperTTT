@@ -11,60 +11,6 @@ body {
     min-width:600px; 
 }
 
-.title {
-    text-align: center;
-}
-
-.control {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    margin: 25px;
-    font-size: 25px;
-    height: 50px;
-}
-
-.control p {
-    text-align: center;
-}
-
-.new-game {
-    cursor: pointer;
-}
-
-.game-grid {
-    display: grid;
-    align-self: center;
-    grid-template-columns: repeat(3, 1fr);
-    grid-template-rows: repeat(3, 1fr);
-    grid-gap: 15px;
-    max-width: 600px;
-    max-height: 600px;
-}
-
-.super-cell {
-    padding: 15px;
-}
-
-.small-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    grid-template-rows: repeat(3, 1fr);
-    grid-gap: 5px;
-}
-
-.clickable {
-    cursor: pointer;
-}
-
-.game-cell {
-    height: 50px;
-    width: 50px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-size: 34px;
-}
-
 .pb_btn-pill {
     border-radius: 50px;
     padding-left: 40px;
