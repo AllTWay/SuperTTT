@@ -1,0 +1,71 @@
+ = Menu
+Log in / Sign up
+Profile
+Play
+	Game
+	with Friends
+	vs AI
+Spectate Game
+Game Modes
+	Normal
+	Timed
+
+
+ = Game in progress
+# Information
+Board
+Current player
+My role
+no. spectators
+Time remaining (for me and for my opponent)
+Who am I playing against
+
+# Actions
+Restart Game -> Asks opponent to restart game
+Surrender -> Loses game but does not leave room
+Main Menu -> Leaves room
+
+
+
+
+ = Game over
+# Actions
+Rematch
+Replay game
+Find new game (new room)
+Main Menu
+Save Game
+Room chat
+ - spectators only interact with spectators
+ - players only interact with players
+
+ = Room
+# Information
+Score [X - O (ties)]
+Playing against {username} (link perfil)
+
+# Actions
+Watch room games
+Save each game (or all)
+
+
+
+ = Profile
+username
+# matches ( Won / Lost )
+Win ratio
+Elo (??? Era mt fixe mesmo)
+Win streak (current, biggest)
+
+
+ == Server Statistics ==
+# simultaneous clients (current and max)
+# games played
+# users
+
+
+ = Disconnect/Reconnect
+When a player disconnects, the room is notified that a player disconnected
+The opponent may leave the room or wait for its opponent
+The disconnected player may reconnect to the game by joining the room directly
+Creating a new game or joining the queue will not affect the ability to reconnect to the first game
