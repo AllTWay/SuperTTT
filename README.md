@@ -16,3 +16,6 @@ The menu logic for STTT will follow this example
 ## Storyboarding on Figma
 
 https://www.figma.com/file/Q6drs9zLc7uG3fEFq5GCGB/STTT?node-id=0%3A3
+
+
+![Visualization of this repo](./diagram.svg)
