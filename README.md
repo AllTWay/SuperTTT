@@ -4,6 +4,8 @@ Super Tic-Tac-Toe
 A project by Migmac and afonsocrg
 - Super Tic-Tac-Toe using Nodejs, Bootstrap and JavaScript
 
+![Visualization of this repo](./diagram.svg)
+
 #### Requirements:
 ```Node.js >= 15.8.0```
 
@@ -17,5 +19,3 @@ The menu logic for STTT will follow this example
 
 https://www.figma.com/file/Q6drs9zLc7uG3fEFq5GCGB/STTT?node-id=0%3A3
 
-
-![Visualization of this repo](./diagram.svg)
