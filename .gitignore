@@ -1,3 +1,4 @@
 node_modules/
 backend/firebase_config.js
 package-lock.json
+.DS_Store
